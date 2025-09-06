@@ -1,6 +1,10 @@
+/* NArray.hpp */
+#pragma once
+
 #include <iostream>
 #include <vector>
 #include <functional>
+#include "../utils/operations.hpp"
 
 
 std::ostream& operator<<(std::ostream& os, const std::vector<bool>& vec) {
@@ -14,32 +18,24 @@ std::ostream& operator<<(std::ostream& os, const std::vector<bool>& vec) {
 }
 
 namespace nc {
-template <typename T> T add(T a, T b) {
-    return a + b;
-}
-
-template <typename T> T subtract(T a, T b) {
-    return a - b;
-}
-
-template <typename T> T multiply(T a, T b) {
-    return a * b;
-}
-
-template <typename T> T divide(T a, T b) {
-    return a / b;
-}
-
 
 struct Shape {
     std::vector<size_t> dimensions;
 
     Shape(std::initializer_list<size_t> dims) :  dimensions(dims) {}
+    
+    Shape() : dimensions({}) {}
 
     void reshape(std::initializer_list<size_t> dims) { dimensions = dims; }
 
     bool same_shape(const Shape& other) const {
         return this->dimensions == other.dimensions;
+    }
+
+    size_t get_total_size() {
+        size_t result = 1;
+        for(const auto& d : dimensions) result *= d;
+        return result;
     }
 
     const size_t& operator[](size_t index) const {
@@ -50,7 +46,7 @@ struct Shape {
         os << '(';
         for(size_t i = 0; i < shape.dimensions.size(); i++) {
             os << shape.dimensions[i];
-            if(i != shape.dimensions.size()) os << ',';
+            if(i != shape.dimensions.size() - 1) os << ',';
         }
         os << ')';
         return os;
@@ -82,6 +78,7 @@ protected:
                 return NArray(newVec);
             }
             else {
+                // TODO
                 std::cout << "Not implemented yet." << std::endl;
                 return *this;
             }
@@ -97,6 +94,7 @@ protected:
             return NArray(newVec);
         }
         else {
+            // TODO
             std::cout << "Not implemented yet." << std::endl;
             return *this;
         }
@@ -117,6 +115,7 @@ protected:
                 return newVec;
             }
             else {
+                // TODO
                 std::cout << "Not implemented yet." << std::endl;
                 return std::vector<bool>(0);
             }
@@ -124,8 +123,13 @@ protected:
     }
 
 public:
+    /* 1D constructors */
+    // Default constructor
+    NArray() : vec(), shape({1,0}) {}
     // Vector constructor
     NArray(std::vector<float> vec) : vec(vec), shape({1, vec.size()}) {}
+    // List constructor
+    NArray(std::initializer_list<float> list) : vec(list), shape({1,vec.size()}) {}
     // Array constructor
     NArray(float *array, size_t size) : vec(array, array + size), shape({1, size}) {}
     // Copy constructor
@@ -134,61 +138,97 @@ public:
     NArray(NArray&& other) noexcept : vec(std::move(other.vec)), shape(std::move(other.shape)) {}
     // Repeat constructor
     NArray(size_t count, float num = 0) : vec(count, num), shape({1, count}) {}
-    // Empty constructor
-    NArray() : vec(), shape({1,0}) {}
 
+    /* N-Dimensional contructor */
+    NArray(std::initializer_list<NArray> arr) {
+        // Check if empty
+        if(!arr.size()) return;
+
+        // Read first dimension
+        shape.dimensions.push_back(arr.size());
+
+        // Continue adding dimensions recursively until base case is reached
+        const NArray& first = *arr.begin();
+        
+        if(first.shape[0] == 1) shape.dimensions.push_back(first.shape[1]);
+        else {
+        shape.dimensions.insert(shape.dimensions.end(),
+                        first.shape.dimensions.begin(),
+                        first.shape.dimensions.end());
+        }
+
+        // Consistency check
+        for (const NArray& sub : arr) {
+            if (sub.shape[1] != first.shape[1]) {
+                throw std::runtime_error("Jagged initializer lists are not supported");
+            }
+        }
+
+        // Reserve space for values
+        vec.reserve(shape.get_total_size());
+
+        // Add values
+        for (const NArray& sub : arr) {
+            vec.insert(vec.end(), sub.vec.begin(), sub.vec.end());
+        }
+    }
+    
 
     /* Operator overloading*/
 
     NArray operator+(const NArray& other) const {
-        return elementWiseOp(other, &add<float>, "add");
+        return elementWiseOp(other, &util::add<float>, "add");
     }
     NArray operator-(const NArray& other) const {
-        return elementWiseOp(other, &subtract<float>, "subtract");
+        return elementWiseOp(other, &util::subtract<float>, "subtract");
     }
     NArray operator*(const NArray& other) const {
-        return elementWiseOp(other, &multiply<float>, "multiply");
+        return elementWiseOp(other, &util::multiply<float>, "multiply");
     }
     NArray operator/(const NArray& other) const {
-        return elementWiseOp(other, &divide<float>, "divide");
+        return elementWiseOp(other, &util::divide<float>, "divide");
+    }
+
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator+(T num, const NArray& arr) {
+        return arr.fullVecOp(static_cast<float>(num), &util::add<float>);
+    }
+
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator-(T num, const NArray& arr) {
+        return arr.fullVecOp(static_cast<float>(num), &util::subtract<float>);
+    }
+
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator*(T num, const NArray& arr) {
+        return arr.fullVecOp(static_cast<float>(num), &util::multiply<float>);
+    }
+
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator/(T num, const NArray& arr) {
+        return arr.fullVecOp(static_cast<float>(num), &util::divide<float>);
+    }
+
+    friend NArray operator+(float num, const NArray& arr) {
+        return arr.fullVecOp(num, &util::add<float>);
+    }
+    friend NArray operator-(float num, const NArray& arr) {
+        return arr.fullVecOp(num, &util::subtract<float>);
+    }
+    friend NArray operator*(float num, const NArray& arr) {
+        return arr.fullVecOp(num, &util::multiply<float>);
+    }
+    friend NArray operator/(float num, const NArray& arr) {
+        return arr.fullVecOp(num, &util::divide<float>);
     }
 
     std::vector<bool> operator==(const NArray& other) const {
         return checkEquality(other);
     }
 
-    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    friend NArray operator+(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<float>(num), &add<float>);
-    }
+    float& operator[](size_t i) { return vec.at(i); }
 
-    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    friend NArray operator-(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<float>(num), &subtract<float>);
-    }
-
-    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    friend NArray operator*(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<float>(num), &multiply<float>);
-    }
-
-    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    friend NArray operator/(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<float>(num), &divide<float>);
-    }
-
-    friend NArray operator+(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &add<float>);
-    }
-    friend NArray operator-(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &subtract<float>);
-    }
-    friend NArray operator*(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &multiply<float>);
-    }
-    friend NArray operator/(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &divide<float>);
-    }
+    const float& operator[](size_t i) const { return vec.at(i); }
 
     friend std::ostream& operator<<(std::ostream& os, const NArray& nVec) {
         if(nVec.shape[0] == 1) {
@@ -200,7 +240,7 @@ public:
             os << ']';
         } 
         else {
-            // Complete when multidimensional arrays are complete.
+            // TODO: Complete when multidimensional arrays are complete.
             // for(int i = 0; i < nVec.size[0]; i++) {
             //     for(int j = 0; j < nVec.size[1]; j++) {
             //         os << nVec.vec[i][j] << ',';
@@ -210,6 +250,9 @@ public:
         }
         return os;
     } 
+
+    /* Helper functions */
+    Shape get_shape() { return this->shape; }
 };
 }
 

@@ -1,3 +1,6 @@
+/* array_creation.hpp */
+#pragma once
+
 #include "NArray.hpp"
 #include <cmath>
 
