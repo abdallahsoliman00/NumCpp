@@ -4,7 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <functional>
-#include "../utils/operations.hpp"
+#include "../Utils/Operations.hpp"
+#include "../Utils/Shape.hpp"
 
 
 std::ostream& operator<<(std::ostream& os, const std::vector<bool>& vec) {
@@ -18,41 +19,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<bool>& vec) {
 }
 
 namespace nc {
-
-struct Shape {
-    std::vector<size_t> dimensions;
-
-    Shape(std::initializer_list<size_t> dims) :  dimensions(dims) {}
-    
-    Shape() : dimensions({}) {}
-
-    void reshape(std::initializer_list<size_t> dims) { dimensions = dims; }
-
-    bool same_shape(const Shape& other) const {
-        return this->dimensions == other.dimensions;
-    }
-
-    size_t get_total_size() {
-        size_t result = 1;
-        for(const auto& d : dimensions) result *= d;
-        return result;
-    }
-
-    const size_t& operator[](size_t index) const {
-        return dimensions[index];
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const Shape& shape) {
-        os << '(';
-        for(size_t i = 0; i < shape.dimensions.size(); i++) {
-            os << shape.dimensions[i];
-            if(i != shape.dimensions.size() - 1) os << ',';
-        }
-        os << ')';
-        return os;
-    } 
-};
-
 
 class NArray {
 private:
@@ -75,7 +41,7 @@ protected:
                 for(int i = 0; i < shape[1]; i++) {
                     newVec[i] = func(vec[i], other.vec[i]);
                 }
-                return NArray(newVec);
+                return NArray(std::move(newVec));
             }
             else {
                 // TODO
@@ -91,7 +57,7 @@ protected:
             for(int i = 0; i < shape[1]; i++) {
                 newVec[i] = func(vec[i], other);
             }
-            return NArray(newVec);
+            return NArray(std::move(newVec));
         }
         else {
             // TODO
@@ -100,7 +66,7 @@ protected:
         }
     }
 
-    std::vector<bool> checkEquality(const NArray& other) const {
+    std::vector<bool> checkEquality(const NArray& other, const bool& eq = true) const {
         if(!same_shape(other)) {
             std::cerr << "[ValueError]: Unable to compare Vectors. Cannot compare shapes " 
                       << shape << " and " << other.shape << '.' << std::endl;
@@ -110,9 +76,9 @@ protected:
             if(shape[0] == 1) {
                 std::vector<bool> newVec(shape[1]);
                 for(int i = 0; i < shape[1]; i++) {
-                    newVec[i] = (vec[i] == other.vec[i]);
+                    newVec[i] = eq ? (vec[i] == other.vec[i]) : (vec[i] != other.vec[i]);
                 }
-                return newVec;
+                return std::move(newVec);
             }
             else {
                 // TODO
@@ -226,6 +192,10 @@ public:
         return checkEquality(other);
     }
 
+    std::vector<bool> operator!=(const NArray& other) const {
+        return checkEquality(other, false);
+    }
+
     float& operator[](size_t i) { return vec.at(i); }
 
     const float& operator[](size_t i) const { return vec.at(i); }
@@ -241,18 +211,14 @@ public:
         } 
         else {
             // TODO: Complete when multidimensional arrays are complete.
-            // for(int i = 0; i < nVec.size[0]; i++) {
-            //     for(int j = 0; j < nVec.size[1]; j++) {
-            //         os << nVec.vec[i][j] << ',';
-            //     }
-            // }
-            os << "Still incomplete.\n";
+            std::cout << '\n';
         }
         return os;
     } 
 
     /* Helper functions */
-    Shape get_shape() { return this->shape; }
+    const Shape& get_shape() const { return this->shape; }
+    
 };
 }
 
