@@ -36,9 +36,9 @@ protected:
             return *this;
         }
         else {
-            if(shape[0] == 1) {
-                std::vector<float> newVec(shape[1]);
-                for(int i = 0; i < shape[1]; i++) {
+            if(shape.get_Ndim() == 1) {
+                std::vector<float> newVec(shape[0]);
+                for(size_t i = 0; i < shape[0]; i++) {
                     newVec[i] = func(vec[i], other.vec[i]);
                 }
                 return NArray(std::move(newVec));
@@ -52,9 +52,9 @@ protected:
     }
 
     NArray fullVecOp(const float& other, std::function<float(float, float)> func) const {
-        if(shape[0] == 1) {
-            std::vector<float> newVec(shape[1]);
-            for(int i = 0; i < shape[1]; i++) {
+        if(shape.get_Ndim() == 1) {
+            std::vector<float> newVec(shape[0]);
+            for(int i = 0; i < shape[0]; i++) {
                 newVec[i] = func(vec[i], other);
             }
             return NArray(std::move(newVec));
@@ -73,9 +73,9 @@ protected:
             return std::vector<bool>(0);
         }
         else {
-            if(shape[0] == 1) {
-                std::vector<bool> newVec(shape[1]);
-                for(int i = 0; i < shape[1]; i++) {
+            if(shape.get_Ndim() == 1) {
+                std::vector<bool> newVec(shape[0]);
+                for(int i = 0; i < shape[0]; i++) {
                     newVec[i] = eq ? (vec[i] == other.vec[i]) : (vec[i] != other.vec[i]);
                 }
                 return std::move(newVec);
@@ -91,19 +91,19 @@ protected:
 public:
     /* 1D constructors */
     // Default constructor
-    NArray() : vec(), shape({1,0}) {}
+    NArray() : vec(), shape() {}
     // Vector constructor
-    NArray(std::vector<float> vec) : vec(vec), shape({1, vec.size()}) {}
+    NArray(std::vector<float> vec) : vec(vec), shape({vec.size()}) {}
     // List constructor
-    NArray(std::initializer_list<float> list) : vec(list), shape({1,vec.size()}) {}
+    NArray(std::initializer_list<float> list) : vec(list), shape({vec.size()}) {}
     // Array constructor
-    NArray(float *array, size_t size) : vec(array, array + size), shape({1, size}) {}
+    NArray(float *array, size_t size) : vec(array, array + size), shape({size}) {}
     // Copy constructor
     NArray(const NArray& newVec) : vec(newVec.vec), shape(newVec.shape) {}
     // Move constructor
     NArray(NArray&& other) noexcept : vec(std::move(other.vec)), shape(std::move(other.shape)) {}
     // Repeat constructor
-    NArray(size_t count, float num = 0) : vec(count, num), shape({1, count}) {}
+    NArray(size_t count, float num = 0) : vec(count, num), shape({count}) {}
 
     /* N-Dimensional contructor */
     NArray(std::initializer_list<NArray> arr) {
@@ -115,17 +115,13 @@ public:
 
         // Continue adding dimensions recursively until base case is reached
         const NArray& first = *arr.begin();
-        
-        if(first.shape[0] == 1) shape.dimensions.push_back(first.shape[1]);
-        else {
         shape.dimensions.insert(shape.dimensions.end(),
-                        first.shape.dimensions.begin(),
-                        first.shape.dimensions.end());
-        }
+                                first.shape.dimensions.begin(),
+                                first.shape.dimensions.end());
 
         // Consistency check
         for (const NArray& sub : arr) {
-            if (sub.shape[1] != first.shape[1]) {
+            if (sub.shape.dimensions != first.shape.dimensions) {
                 throw std::runtime_error("Jagged initializer lists are not supported");
             }
         }
@@ -201,11 +197,11 @@ public:
     const float& operator[](size_t i) const { return vec.at(i); }
 
     friend std::ostream& operator<<(std::ostream& os, const NArray& nVec) {
-        if(nVec.shape[0] == 1) {
+        if(nVec.shape.get_Ndim() == 1) {
             os << '[';
-            for(int i = 0; i < nVec.shape[1]; i++) {
+            for(int i = 0; i < nVec.shape[0]; i++) {
                 os << nVec.vec[i];
-                if(i != nVec.shape[1] - 1) os << ", ";
+                if(i != nVec.shape[0] - 1) os << ", ";
             }
             os << ']';
         } 
@@ -218,7 +214,6 @@ public:
 
     /* Helper functions */
     const Shape& get_shape() const { return this->shape; }
-    
 };
 }
 

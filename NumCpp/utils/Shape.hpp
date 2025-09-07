@@ -19,11 +19,13 @@ struct Shape {
 
     void reshape(const std::initializer_list<size_t>& dims) { dimensions = std::move(dims); }
 
+    size_t get_Ndim() const { return dimensions.size(); }
+
     bool same_shape(const Shape& other) const {
         return this->dimensions == other.dimensions;
     }
 
-    size_t get_total_size() {
+    size_t get_total_size() const {
         size_t result = 1;
         for(const auto& d : dimensions) result *= d;
         return result;
@@ -37,7 +39,7 @@ struct Shape {
         os << '(';
         for(size_t i = 0; i < shape.dimensions.size(); i++) {
             os << shape.dimensions[i];
-            if(i != shape.dimensions.size() - 1) os << ',';
+            if((i != shape.dimensions.size() - 1) || (0 == i)) os << ',';
         }
         os << ')';
         return os;
