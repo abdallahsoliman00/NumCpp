@@ -1,7 +1,7 @@
 /* Operations.hpp */
 #pragma once
 
-namespace util {
+namespace numcpp::util {
 template <typename T> T add(T a, T b) {
     return a + b;
 }

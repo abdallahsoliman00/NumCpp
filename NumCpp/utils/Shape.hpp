@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-namespace nc {
+namespace numcpp {
 
 struct Shape {
     std::vector<size_t> dimensions;
@@ -31,8 +31,8 @@ struct Shape {
         return result;
     }
 
-    const size_t& operator[](size_t index) const {
-        return dimensions[index];
+    const size_t& operator[](int index) const {
+        return dimensions[get_index(index)];
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Shape& shape) {
@@ -43,7 +43,19 @@ struct Shape {
         }
         os << ')';
         return os;
-    } 
+    }
+
+private:
+    size_t get_index(const int& index) const {
+        int size = static_cast<int>(dimensions.size());
+
+        if((index >= 0) && (index < size))
+            return static_cast<size_t>(index);
+        else if((index < 0) && (index >= -size))
+            return static_cast<size_t>(index + size);
+        else
+            throw std::runtime_error("Index out of range.\n");
+    }
 };
 
 }

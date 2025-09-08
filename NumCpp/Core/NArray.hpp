@@ -18,7 +18,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<bool>& vec) {
     return os;
 }
 
-namespace nc {
+namespace numcpp {
 
 class NArray {
 private:
@@ -86,6 +86,21 @@ protected:
                 return std::vector<bool>(0);
             }
         }
+    }
+
+    static void recursivePrint(std::ostream& os, const std::vector<float>& data, const Shape& shape) {
+        return;
+    }
+
+    size_t get_index(const int& index) const {
+        int size = static_cast<int>(vec.size());
+
+        if((index >= 0) && (index < size))
+            return static_cast<size_t>(index);
+        else if((index < 0) && (index >= -size))
+            return static_cast<size_t>(index + size);
+        else
+            throw std::runtime_error("Index out of range.\n");
     }
 
 public:
@@ -192,25 +207,36 @@ public:
         return checkEquality(other, false);
     }
 
-    float& operator[](size_t i) { return vec.at(i); }
+    float& operator[](const int& i) { return vec[get_index(i)]; }
 
-    const float& operator[](size_t i) const { return vec.at(i); }
+    const float& operator[](const int& i) const { return vec[get_index(i)]; }
 
-    friend std::ostream& operator<<(std::ostream& os, const NArray& nVec) {
-        if(nVec.shape.get_Ndim() == 1) {
+    friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
+        switch(arr.shape.get_Ndim()) {
+        case 1: // 1D vector
             os << '[';
-            for(int i = 0; i < nVec.shape[0]; i++) {
-                os << nVec.vec[i];
-                if(i != nVec.shape[0] - 1) os << ", ";
+            for(int i = 0; i < arr.shape[0]; i++) {
+                os << arr.vec[i];
+                if(i != arr.shape[0] - 1) os << ", ";
             }
             os << ']';
-        } 
-        else {
+            break;
+
+        case 2: // Martix
             // TODO: Complete when multidimensional arrays are complete.
             std::cout << '\n';
+            break;
+
+        default: // Anything else
+            os << '[';
+            for(const auto &dim : arr.shape.dimensions) {
+
+            }
+            os << ']';
+            break;
         }
         return os;
-    } 
+} 
 
     /* Helper functions */
     const Shape& get_shape() const { return this->shape; }

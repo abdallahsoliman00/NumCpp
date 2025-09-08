@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-namespace nc {
+namespace numcpp {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
     NArray zeros(const size_t& size) {
         return NArray(size);
