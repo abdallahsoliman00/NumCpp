@@ -8,6 +8,7 @@ namespace numcpp {
 
 struct Shape {
     std::vector<size_t> dimensions;
+
     // Default constructor
     Shape() : dimensions({}) {}
     // Initializer constructor
@@ -16,6 +17,13 @@ struct Shape {
     Shape(const Shape& newShape) : dimensions(newShape.dimensions) {}
     // Move constructor
     Shape(Shape&& other) noexcept : dimensions(std::move(other.dimensions)) {}
+    // Iterator constructor
+    template <typename Iter>
+    Shape(Iter first, Iter last) : dimensions(first, last) {}
+    // Vector constructor
+    Shape(const std::vector<size_t>& dims) : dimensions(dims) {}
+    // Move constructor
+    Shape(std::vector<size_t>&& dims) noexcept : dimensions(std::move(dims)) {}
 
     void reshape(const std::initializer_list<size_t>& dims) { dimensions = std::move(dims); }
 

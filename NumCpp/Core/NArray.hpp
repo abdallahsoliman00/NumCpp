@@ -4,8 +4,10 @@
 #include <iostream>
 #include <vector>
 #include <functional>
-#include "../Utils/Operations.hpp"
-#include "../Utils/Shape.hpp"
+#include <string>
+#include "Shape.hpp"
+#include "../Utils/MathOps.hpp"
+#include "../Utils/VecOps.hpp"
 
 
 std::ostream& operator<<(std::ostream& os, const std::vector<bool>& vec) {
@@ -88,8 +90,35 @@ protected:
         }
     }
 
-    static void recursivePrint(std::ostream& os, const std::vector<float>& data, const Shape& shape) {
-        return;
+    static void OneDPrint(std::ostream& os, const NArray& arr) {
+        os << '[';
+        for(int i = 0; i < arr.shape[0]; i++) {
+            os << arr.vec[i];
+            if(i != arr.shape[0] - 1) os << ", ";
+        }
+        os << ']';
+    }
+
+    static void recursivePrint(std::ostream& os, const NArray& arr) {
+        // Base case
+        if(arr.shape.get_Ndim() == 1) {
+            OneDPrint(os, arr);
+            return;
+        }
+
+        // Take the first element and split 
+        size_t n_grps = arr.shape[0];
+        auto groups = util::split(arr.vec, n_grps);
+
+        Shape subshape(arr.shape.dimensions.begin() + 1, arr.shape.dimensions.end());
+        
+        os << '[';
+        for (size_t i = 0; i < groups.size(); i++) {
+            recursivePrint(os, NArray(groups[i], subshape));
+            if (i != groups.size() - 1) os << ", ";
+        }
+        os << ']';
+
     }
 
     size_t get_index(const int& index) const {
@@ -110,7 +139,7 @@ public:
     // Vector constructor
     NArray(std::vector<float> vec) : vec(vec), shape({vec.size()}) {}
     // List constructor
-    NArray(std::initializer_list<float> list) : vec(list), shape({vec.size()}) {}
+    NArray(std::initializer_list<float> list) : vec(list), shape({list.size()}) {}
     // Array constructor
     NArray(float *array, size_t size) : vec(array, array + size), shape({size}) {}
     // Copy constructor
@@ -120,7 +149,8 @@ public:
     // Repeat constructor
     NArray(size_t count, float num = 0) : vec(count, num), shape({count}) {}
 
-    /* N-Dimensional contructor */
+    /* N-Dimensional contructors */
+    // Recursive constructor
     NArray(std::initializer_list<NArray> arr) {
         // Check if empty
         if(!arr.size()) return;
@@ -149,6 +179,8 @@ public:
             vec.insert(vec.end(), sub.vec.begin(), sub.vec.end());
         }
     }
+    // Data + shape constructor
+    NArray(std::vector<float> data, Shape shape) : vec(std::move(data)), shape(std::move(shape)) {}
     
 
     /* Operator overloading*/
@@ -214,25 +246,22 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
         switch(arr.shape.get_Ndim()) {
         case 1: // 1D vector
+            OneDPrint(os, arr);
+            break;
+
+        case 2: { // Martix
             os << '[';
-            for(int i = 0; i < arr.shape[0]; i++) {
-                os << arr.vec[i];
-                if(i != arr.shape[0] - 1) os << ", ";
+            auto grps = util::split(arr.vec, arr.shape[0]);
+            for(size_t i = 0; i < grps.size(); i++) {
+                OneDPrint(os, NArray(grps[i]));
+                if(i != grps.size() - 1) os << ",\n ";
             }
             os << ']';
             break;
-
-        case 2: // Martix
-            // TODO: Complete when multidimensional arrays are complete.
-            std::cout << '\n';
-            break;
+        }
 
         default: // Anything else
-            os << '[';
-            for(const auto &dim : arr.shape.dimensions) {
-
-            }
-            os << ']';
+            recursivePrint(os, arr);
             break;
         }
         return os;
