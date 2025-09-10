@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 namespace numcpp {
 
@@ -25,20 +26,43 @@ struct Shape {
     // Move constructor
     Shape(std::vector<size_t>&& dims) noexcept : dimensions(std::move(dims)) {}
 
+    // Changes the shape
     void reshape(const std::initializer_list<size_t>& dims) { dimensions = std::move(dims); }
 
+    // Flattens the shape
+    void flatten() { dimensions = {get_total_size()};}
+
+    // Returns the total number of dimensions is a shape
     size_t get_Ndim() const { return dimensions.size(); }
 
+    // Checks if two shapes are identical
     bool same_shape(const Shape& other) const {
         return this->dimensions == other.dimensions;
     }
 
+    // Returns the total size required to store the array
     size_t get_total_size() const {
         size_t result = 1;
         for(const auto& d : dimensions) result *= d;
         return result;
     }
 
+    // Transpose a vector or matrix;
+    void transpose() {
+        switch(get_Ndim()) {
+            case 1:
+                reshape({1,dimensions[0]});
+                break;
+            case 2:
+                std::reverse(dimensions.begin(), dimensions.end());
+                break;
+            default:
+                throw std::runtime_error("Cannot transpose arrays with more than 2 dimensions.");
+                break;
+        }
+    }
+
+    // Index operator
     const size_t& operator[](int index) const {
         return dimensions[get_index(index)];
     }
