@@ -45,10 +45,18 @@ protected:
         }
     }
 
-    NArray fullVecOp(const float& other, std::function<dtype(dtype, dtype)> func) const {
+    NArray fullVecOpR(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
         std::vector<dtype> newVec(shape.get_total_size());
         for(int i = 0; i < shape.get_total_size(); i++) {
-            newVec[i] = func(vec[i], other);
+            newVec[i] = func(vec[i], scalar);
+        }
+        return NArray(std::move(newVec), shape);
+    }
+
+    NArray fullVecOpL(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
+        std::vector<dtype> newVec(shape.get_total_size());
+        for(int i = 0; i < shape.get_total_size(); i++) {
+            newVec[i] = func(scalar, vec[i]);
         }
         return NArray(std::move(newVec), shape);
     }
@@ -135,7 +143,7 @@ public:
     // Recursive constructor
     NArray(std::initializer_list<NArray> arr) {
         // Check if empty
-        if(!arr.size()) return;
+        if(!arr.size()) return; // Base case
 
         // Read first dimension
         shape.dimensions.push_back(arr.size());
@@ -172,6 +180,7 @@ public:
     
 
     /* Operator overloading*/
+    // TODO: These need reworking for ndarrays: check size
 
     NArray operator+(const NArray& other) const {
         return elementWiseOp(other, &util::add<dtype>, "add");
@@ -186,37 +195,47 @@ public:
         return elementWiseOp(other, &util::divide<dtype>, "divide");
     }
 
+    /* Scalar Overloads */
+    // Left addition overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator+(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<dtype>(num), &util::add<dtype>);
+        return arr.fullVecOpL(static_cast<dtype>(num), &util::add<dtype>);
     }
-
+    // Left subtraction overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator-(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<dtype>(num), &util::subtract<dtype>);
+        return arr.fullVecOpL(static_cast<dtype>(num), &util::subtract<dtype>);
     }
-
+    // Left multiplication overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator*(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<dtype>(num), &util::multiply<dtype>);
+        return arr.fullVecOpL(static_cast<dtype>(num), &util::multiply<dtype>);
     }
-
+    // Left division overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator/(T num, const NArray& arr) {
-        return arr.fullVecOp(static_cast<dtype>(num), &util::divide<dtype>);
+        return arr.fullVecOpL(static_cast<dtype>(num), &util::divide<dtype>);
     }
 
-    friend NArray operator+(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &util::add<dtype>);
+    // Right addition overload
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator+(const NArray& arr, T num) {
+        return arr.fullVecOpR(static_cast<dtype>(num), &util::add<dtype>);
     }
-    friend NArray operator-(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &util::subtract<dtype>);
+    // Right subtraction overload
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator-(const NArray& arr, T num) {
+        return arr.fullVecOpR(static_cast<dtype>(num), &util::subtract<dtype>);
     }
-    friend NArray operator*(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &util::multiply<dtype>);
+    // Right multiplication overload
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator*(const NArray& arr, T num) {
+        return arr.fullVecOpR(static_cast<dtype>(num), &util::multiply<dtype>);
     }
-    friend NArray operator/(float num, const NArray& arr) {
-        return arr.fullVecOp(num, &util::divide<dtype>);
+    // Right division overload
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator/(const NArray& arr, T num) {
+        return arr.fullVecOpR(static_cast<dtype>(num), &util::divide<dtype>);
     }
 
     NArray<bool> operator==(const NArray& other) const {
@@ -227,7 +246,7 @@ public:
         return checkEquality(other, false);
     }
 
-    // TODO: Make these operators properly ined the n-dimensinal arrays.
+    // TODO: Make these operators properly index the n-dimensinal arrays.
     // Use recursion to get the correct arrays?
     dtype& operator[](const int& i) { return vec[get_index(i)]; }
 
