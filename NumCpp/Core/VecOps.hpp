@@ -2,20 +2,22 @@
 #pragma once
 
 #include "Shape.hpp"
+#include "NArray.hpp"
 
 namespace numcpp {
 
 template <typename dtype>
-std::vector<dtype> hadamardProduct(
-    const std::vector<dtype>& larr, const Shape& lshape,
-    const std::vector<dtype>& rarr, const Shape& rshape
-) {
-    auto out_shape = Shape::get_product_shape(lshape, rshape);
-    std::vector<dtype> out(out_shape.get_total_size());
-    
-    // for(int i = 0; i < )
-
-    return out;
+NArray<dtype> matmul(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
+    if (!(lmat.shape.are_multipliable(rmat.shape))) {
+        error::ShapeError(lmat.shape, rmat.shape, "multiply");
     }
+    auto out_data = util::matmul(
+        lmat.data, lmat.shape,
+        rmat.data, rmat.shape
+    );
+    auto out_shape = Shape::get_product_shape(this->shape, other.shape);
+
+    return NArray(out_data, out_shape);
+}
 
 } // namespace numcpp

@@ -6,7 +6,6 @@
 #include <functional>
 #include <string>
 #include "Shape.hpp"
-#include "VecOps.hpp"
 #include "../Utils/MathOps.hpp"
 #include "../Utils/VecOps.hpp"
 #include "../Utils/Errors.hpp"
@@ -16,21 +15,13 @@ namespace numcpp {
 
 template <typename dtype = double>
 class NArray {
-private:
+protected:
     std::vector<dtype> data;
     Shape shape;
-    
-protected:
+
     // Checks if two shapes are the same
     bool same_shape(const NArray& other) const {
         return shape.same_shape(other.shape);
-    }
-    // Checks if *this * other is possible
-    // If elementwise, returns 1, if matrix multipliable returns 2.
-    uint16_t are_multipliable(const NArray& other) const {
-        if(this->same_shape(other)) return 1;
-        else if(shape.are_multipliable(other.shape)) return 2;
-        else return 0;
     }
     
     // Elementwise operation of two NArrays
@@ -60,9 +51,10 @@ protected:
         return NArray(std::move(newVec), shape);
     }
 
+    // Returns a mask of which NArray elements are the same
     NArray<bool> checkEquality(const NArray& other, const bool& eq = true) const {
         if(!same_shape(other)) {
-            error::ShapeError(this->shape, other.shape, "compare")
+            throw error::ShapeError(this->shape, other.shape, "compare");
         }
         else {
             std::vector<bool> newVec(shape.get_total_size());
@@ -73,6 +65,7 @@ protected:
         }
     }
 
+    // Print a 1D array
     static void OneDPrint(std::ostream& os, const NArray& arr) {
         os << '[';
         for(int i = 0; i < arr.shape[0]; i++) {
@@ -86,6 +79,7 @@ protected:
         os << ']';
     }
 
+    // Recursively prints the N-Dimensional arrays (> 2D arrays)
     static void recursivePrint(std::ostream& os, const NArray& arr, int depth = 0) {
         // Base case
         if(arr.shape.get_Ndim() == 1) {
@@ -158,7 +152,7 @@ public:
         // Consistency check
         for (const NArray& sub : arr) {
             if (sub.shape.dimensions != first.shape.dimensions) {
-                throw std::runtime_error("Jagged initializer lists are not supported.");
+                throw error::ValueError("Jagged initializer lists are not supported.");
             }
         }
 
@@ -173,46 +167,41 @@ public:
     // Data + shape constructor
     NArray(std::vector<dtype> vec, Shape shape) : data(std::move(vec)), shape(std::move(shape)) {
         if (this->shape.get_total_size() != data.size()) {
-            throw std::runtime_error("Cannot construct NArray because Shape and data size don't match.");
+            throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
     }
-    // Shape + initializer constructor
+    // Shape + initializer value constructor
     NArray(const Shape& shape, dtype val = 0) : data(shape.get_total_size(), val), shape(shape) {}
     NArray(Shape&& shape, dtype val = 0) noexcept : data(shape.get_total_size(), val), shape(std::move(shape)) {}
 
 
 
     /* Operator overloading*/
-    // TODO: These need reworking for ndarrays: check size
     // Array addition
     NArray operator+(const NArray& other) const {
         if(!same_shape(other))
-            error::ShapeError(this->shape, other.shape, "add");
+            throw error::ShapeError(this->shape, other.shape, "add");
         else
             return elementWiseOp(other, &util::add<dtype>);
     }
     // Array subtraction
     NArray operator-(const NArray& other) const {
         if(!same_shape(other))
-            error::ShapeError(this->shape, other.shape, "subtract");
+            throw error::ShapeError(this->shape, other.shape, "subtract");
         else
             return elementWiseOp(other, &util::subtract<dtype>);
     }
     // Array multiplication
     NArray operator*(const NArray& other) const {
-        switch(this->are_multipliable(other)) {
-            case 0:
-                error::ShapeError(this->shape, other.shape, "multiply");
-            case 1:
-                return elementWiseOp(other, &util::multiply<dtype>);
-            case 2:
-                return hadamardProduct(this->data, this->shape, other.data, other.shape);
-        }
+        if(!same_shape(other))
+            throw error::ShapeError(this->shape, other.shape, "multiply");
+        else
+            return elementWiseOp(other, &util::multiply<dtype>);
     }
     // Array division
     NArray operator/(const NArray& other) const {
         if(!same_shape(other))
-            error::ShapeError(this->shape, other.shape, "divide");
+            throw error::ShapeError(this->shape, other.shape, "divide");
         else
             return elementWiseOp(other, &util::divide<dtype>);
     }
@@ -297,16 +286,22 @@ public:
             break;
         }
         return os;
-} 
+    }
 
     /* Helper functions */
-
+    // Fetches the NArray shape
     const Shape& get_shape() const { return this->shape; }
 
     // Returns a reference to the data
     std::vector<dtype>& get_data() { return data; }
 
     /* NArray functions */
+    // Returns a new transposed matrix
+    NArray transpose() {
+        auto out_shape = shape.transpose();
+        auto out_data = util::transpose(data, shape);
+        return NArray(out_data,out_shape);
+    }
 
     NArray flatten() { return NArray(data); }
 
@@ -320,7 +315,7 @@ public:
 
 };
 
-// Deduction guides
+/* Deduction guides */
 // Vector constructor
 template <typename T>
 NArray(std::vector<T>) -> NArray<T>;
@@ -342,4 +337,3 @@ template <typename T>
 NArray(std::vector<T>, Shape) -> NArray<T>;
 
 } // namespace numcpp
-

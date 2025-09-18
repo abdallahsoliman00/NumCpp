@@ -2,8 +2,53 @@
 #pragma once
 
 #include <vector>
+#include "../Core/Shape.hpp"
 
 namespace numcpp::util {
+
+template <typename dtype>
+std::vector<dtype> matmul(
+    const std::vector<dtype>& larr, const Shape& lshape,
+    const std::vector<dtype>& rarr, const Shape& rshape
+) {
+    auto out_shape = Shape::get_product_shape(lshape, rshape);
+    std::vector<dtype> out(out_shape.get_total_size(), static_cast<dtype>(0));
+    
+    int m = lshape[0];
+    int k = lshape[1];
+    int n = rshape[1];
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            dtype sum = 0;
+            for (int t = 0; t < k; t++) {
+                sum += larr[i * k + t] * rarr[t * n + j];
+            }
+            out[i * n + j] = sum;
+        }
+    }
+
+    return out;
+}
+
+
+template <typename dtype>
+std::vector<dtype> transpose(
+    const std::vector<dtype>& arr, const Shape& shape
+) {
+    std::vector<dtype> out(arr.size());
+    
+    int rows = shape[0];
+    int cols = shape[1];
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            out[j * rows + i] = arr[i * cols + j];
+        }
+    }
+    return out;
+}
+
 
 template <typename T>
 std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {

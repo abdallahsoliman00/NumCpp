@@ -61,13 +61,13 @@ struct Shape {
     }
 
     // Transpose a vector or matrix;
-    void transpose() {
+    Shape transpose() {
         switch(get_Ndim()) {
             case 1:
-                reshape({1,dimensions[0]});
+                return Shape({1,dimensions[0]});
                 break;
             case 2:
-                std::reverse(dimensions.begin(), dimensions.end());
+                return Shape({dimensions[1],dimensions[0]});
                 break;
             default:
                 throw std::runtime_error("Cannot transpose arrays with more than 2 dimensions.");
