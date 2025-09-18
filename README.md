@@ -1,4 +1,7 @@
-# NumCpp
+<p align="center">
+  <img src="logo.svg" alt="Description" width="65%" />
+</p>
+<!-- # NumCpp -->
 
 A simple C++ library inspired by NumPy.
 
