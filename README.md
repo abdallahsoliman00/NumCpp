@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.svg" alt="Description" width="65%" />
+  <img src="logo.svg" alt="Description" width="40%" />
 </p>
 <!-- # NumCpp -->
 
