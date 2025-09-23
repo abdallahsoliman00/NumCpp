@@ -40,8 +40,18 @@ struct Shape {
         return this->dimensions == other.dimensions;
     }
 
+    // Equality operator
+    bool operator==(const Shape& other) const {
+        return same_shape(other);
+    }
+
+    // Inequality operator
+    bool operator!=(const Shape& other) const {
+        return !same_shape(other);
+    }
+
     // Checks if two shapes can be multiplied
-    bool are_multipliable(const Shape& other) const {
+    bool are_matrix_multipliable(const Shape& other) const {
         if(this->get_Ndim() > 2 || other.get_Ndim() > 2)
             return false;
         else

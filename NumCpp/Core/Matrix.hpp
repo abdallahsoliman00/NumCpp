@@ -13,30 +13,56 @@ protected:
     using NArray<dtype>::shape;
 
 public:
+    /* Constructors */
     using NArray<dtype>::NArray;  // inherit constructors
     // TODO: Delete all unwanted constructors or only include the constructors needed for matrix
     // TODO: Reimplement the recursive constructor to always ensure a total of two dimensions
 
+
+    /* Helper Functions */
     bool are_multipliable(const Matrix<dtype>& other) const {
-        return this->shape.are_multipliable(other.shape);
+        return this->shape.are_matrix_multipliable(other.shape);
     }
 
-    // hide + delete base Hadamard when LHS is Matrix
-    NArray<dtype> operator*(const NArray<dtype>&) const = delete;
-    
+    Matrix transpose() {
+        auto out_shape = shape.transpose();
+        auto out_data = util::transpose(data, shape);
+        return Matrix(out_data,out_shape);
+    }
+
+
+    /* Operator Overloads */
+    // Multiplication Overloads
     Matrix<dtype> operator*(const Matrix<dtype>& other) const {
-        if (!this->shape.same_shape(other.shape)) {
-            error::ShapeError(this->shape, other.shape, "multiply");
+        if (!this->are_multipliable(other)) {
+            throw error::ShapeError(this->shape, other.shape, "multiply");
         }
         auto out_data = util::matmul(
             this->data, this->shape,
             other.data, other.shape
         );
         auto out_shape = Shape::get_product_shape(this->shape, other.shape);
-
         return Matrix(out_data, out_shape);
     }
-    
+    NArray<dtype> operator*(const NArray<dtype>& other) const override {
+        if(const auto* matrix_other = dynamic_cast<const Matrix<dtype>*>(&other)) {
+            return this->operator*(*matrix_other);
+        }
+        
+        // Check if it's a valid 2D NArray that can be treated as a matrix
+        if(this->shape.are_matrix_multipliable(other.get_shape())) {
+            // Treat the NArray as a matrix for multiplication
+            auto out_data = util::matmul(
+                this->data, this->shape,
+                other.get_data(), other.get_shape()
+            );
+            auto out_shape = Shape::get_product_shape(this->shape, other.get_shape());
+            return Matrix(out_data, out_shape);
+        }
+        
+        throw error::ShapeError(this->shape, other.get_shape(), "multiply");
+    }
+
 };
 
 } // namespace numcpp

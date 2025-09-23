@@ -61,4 +61,18 @@ std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
     return vout;
 }
 
+
+template <typename T>
+std::vector<T> elementwiseOP(
+    const std::vector<T>& larr,
+    const std::vector<T>& rarr,
+    std::function<T(T, T)> func
+) {
+    std::vector<T> out(larr.size());
+    for(uint32_t i = 0; i < larr.size(); i++) {
+        out[i] = func(larr[i], rarr[i]);
+    }
+    return out;
 }
+
+} // namespace numcpp::util

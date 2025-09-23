@@ -165,7 +165,7 @@ public:
         }
     }
     // Data + shape constructor
-    NArray(std::vector<dtype> vec, Shape shape) : data(std::move(vec)), shape(std::move(shape)) {
+    NArray(std::vector<dtype> vec, Shape shape) : data(std::move(vec)), shape(shape) {
         if (this->shape.get_total_size() != data.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
@@ -192,7 +192,7 @@ public:
             return elementWiseOp(other, &util::subtract<dtype>);
     }
     // Array multiplication
-    NArray operator*(const NArray& other) const {
+    virtual NArray operator*(const NArray& other) const {
         if(!same_shape(other))
             throw error::ShapeError(this->shape, other.shape, "multiply");
         else
@@ -293,10 +293,10 @@ public:
     const Shape& get_shape() const { return this->shape; }
 
     // Returns a reference to the data
-    std::vector<dtype>& get_data() { return data; }
+    const std::vector<dtype>& get_data() const { return this->data; }
 
     /* NArray functions */
-    // Returns a new transposed matrix
+    // Returns a NEW transposed matrix
     NArray transpose() {
         auto out_shape = shape.transpose();
         auto out_data = util::transpose(data, shape);
