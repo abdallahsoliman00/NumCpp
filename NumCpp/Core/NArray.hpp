@@ -16,6 +16,8 @@ namespace numcpp {
 template <typename dtype = double>
 class NArray {
 protected:
+    // TODO: Change the entore data storage system to mimic numpy better.
+    // make data a shared pointer that points to the data unless a copy is called
     std::vector<dtype> data;
     Shape shape;
 
@@ -107,7 +109,7 @@ protected:
     }
 
     uint32_t get_index(const int& index) const {
-        int size = static_cast<int>(data.size());
+        int size = static_cast<int>(shape[0]);
 
         if((index >= 0) && (index < size))
             return static_cast<uint32_t>(index);
@@ -118,7 +120,7 @@ protected:
     }
 
 public:
-    /* 1D constructors */
+    /* ====== 1D constructors ====== */
     // Default constructor
     NArray() : data(), shape() {}
     // Vector constructor
@@ -165,7 +167,12 @@ public:
         }
     }
     // Data + shape constructor
-    NArray(std::vector<dtype> vec, Shape shape) : data(std::move(vec)), shape(shape) {
+    NArray(std::vector<dtype>&& vec, Shape&& shape) : data(std::move(vec)), shape(shape) {
+        if (this->shape.get_total_size() != data.size()) {
+            throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
+        }
+    }
+    NArray(const std::vector<dtype>& vec, const Shape& shape) : data(vec), shape(shape) {
         if (this->shape.get_total_size() != data.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
@@ -176,7 +183,7 @@ public:
 
 
 
-    /* Operator overloading*/
+    /* ====== Operator Overloading ====== */
     // Array addition
     NArray operator+(const NArray& other) const {
         if(!same_shape(other))
@@ -249,7 +256,7 @@ public:
         return arr.fullVecOpL(static_cast<dtype>(num), &util::divide<dtype>);
     }
 
-
+    /* Equality Overloads */
     NArray<bool> operator==(const NArray& other) const {
         return checkEquality(other);
     }
@@ -258,11 +265,17 @@ public:
         return checkEquality(other, false);
     }
 
-    // TODO: Make these operators properly index the n-dimensinal arrays.
-    // Use recursion to get the correct arrays?
-    dtype& operator[](const int& i) { return data[get_index(i)]; }
+    NArray<dtype> operator[](const int& i) {
+        auto index = get_index(i);
+        NArray<dtype> out(
+            std::vector<dtype>(this->data.begin() + shape[1] * index,
+                               this->data.begin() + shape[1] * index + shape.get_total_size() / shape[0]),
+            Shape(shape.dimensions.begin() + 1, shape.dimensions.end())
+        );
+        return out;
+    }
 
-    const dtype& operator[](const int& i) const { return data[get_index(i)]; }
+    // const dtype& operator[](const int& i) const { return data[get_index(i)]; }
 
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
         switch(arr.shape.get_Ndim()) {
