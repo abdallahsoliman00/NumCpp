@@ -54,14 +54,14 @@ protected:
     }
 
     // Returns a mask of which NArray elements are the same
-    NArray<bool> checkEquality(const NArray& other, const bool& eq = true) const {
+    NArray<bool> elementwiseCompare(const NArray& other, std::function<bool(dtype,dtype)> comparison_func) const {
         if(!same_shape(other)) {
             throw error::ShapeError(this->shape, other.shape, "compare");
         }
         else {
             std::vector<bool> newVec(shape.get_total_size());
             for(int i = 0; i < shape.get_total_size(); i++) {
-                newVec[i] = eq ? (data[i] == other.data[i]) : (data[i] != other.data[i]);
+                newVec[i] = comparison_func(data[i], other.data[i]);
             }
             return NArray<bool>(newVec, shape);
         }
@@ -258,13 +258,25 @@ public:
 
     /* Equality Overloads */
     NArray<bool> operator==(const NArray& other) const {
-        return checkEquality(other);
+        return elementwiseCompare(other, &util::eq<dtype>);
     }
-
     NArray<bool> operator!=(const NArray& other) const {
-        return checkEquality(other, false);
+        return elementwiseCompare(other, &util::neq<dtype>);
+    }
+    NArray<bool> operator<=(const NArray& other) const {
+        return elementwiseCompare(other, &util::leq<dtype>);
+    }
+    NArray<bool> operator>=(const NArray& other) const {
+        return elementwiseCompare(other, &util::geq<dtype>);
+    }
+    NArray<bool> operator<(const NArray& other) const {
+        return elementwiseCompare(other, &util::less_than<dtype>);
+    }
+    NArray<bool> operator>(const NArray& other) const {
+        return elementwiseCompare(other, &util::greater_than<dtype>);
     }
 
+    /* Index Overload */
     NArray<dtype> operator[](const int& i) {
         auto index = get_index(i);
         NArray<dtype> out(
@@ -277,6 +289,7 @@ public:
 
     // const dtype& operator[](const int& i) const { return data[get_index(i)]; }
 
+    /* Print Overload */
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
         switch(arr.shape.get_Ndim()) {
         case 1: // 1D vector
