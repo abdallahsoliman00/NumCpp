@@ -5,10 +5,13 @@
 #include <vector>
 #include <functional>
 #include <string>
+#include <memory>
+
 #include "Shape.hpp"
 #include "../Utils/MathOps.hpp"
 #include "../Utils/VecOps.hpp"
 #include "../Utils/Errors.hpp"
+#include "../Utils/Copy.hpp"
 
 
 namespace numcpp {
@@ -18,6 +21,7 @@ class NArray {
 protected:
     // TODO: Change the entore data storage system to mimic numpy better.
     // make data a shared pointer that points to the data unless a copy is called
+    std::shared_ptr<dtype[]> data_ptr;
     std::vector<dtype> data;
     Shape shape;
 
@@ -122,19 +126,49 @@ protected:
 public:
     /* ====== 1D constructors ====== */
     // Default constructor
-    NArray() : data(), shape() {}
+    NArray() : data_ptr(nullptr), shape() {}
+    // Scalar constructor
+    NArray(const dtype& scalar) : data_ptr(new dtype[1]), shape({1}) {}
     // Vector constructor
-    NArray(const std::vector<dtype>& data) : data(data), shape({static_cast<uint32_t>(data.size())}) {}
+    NArray(const std::vector<dtype>& data) : data_ptr(new dtype[data.size()]), shape({static_cast<uint32_t>(data.size())}) {
+        for(int i = 0; i < data.size(); i++)
+            data_ptr[i] = data[i];
+    }
+    NArray(std::vector<dtype>&& data) : data_ptr(new dtype[data.size()]), shape({data.size}) {
+        std::move(data.begin(), data.end(), data_ptr.get());
+    }
     // List constructor
-    NArray(std::initializer_list<dtype> list) : data(list), shape({static_cast<uint32_t>(list.size())}) {}
-    // Array constructor
-    NArray(dtype *array, uint32_t size) : data(array, array + size), shape({size}) {}
+    NArray(std::initializer_list<dtype> list) : data_ptr(new dtype[list.size()]), shape({static_cast<uint32_t>(list.size())}) {
+        int i = 0;
+        for(auto item : list)
+            data_ptr[i++] = item;
+    }
+    // Array constructor from heap array (ownership takeover)
+    NArray(dtype *array, const uint32_t& size) : data_ptr(new dtype[size]), shape({size}) {}
+    // Array constructor from heap array (copy)
+    NArray(copy_t, dtype *array, const uint32_t& size) : data_ptr(new dtype[size]), shape({size}) {
+        // Use numcpp::copy as the first argument to copy
+        for(int i = 0; i < size; i++)
+            data_ptr[i] = array[i];
+    }
+    // Array constructor from stack array
+    template <uint32_t N>
+    NArray(dtype (&array)[N]) : data_ptr(new dtype[N]), shape({N}) {
+        for(int i = 0; i < N; i++)
+            data_ptr[i] = array[i];
+    }
     // Copy constructor
-    NArray(const NArray& newVec) : data(newVec.data), shape(newVec.shape) {}
+    NArray(const NArray& oldarray) {
+        data_ptr = std::shared_ptr<dtype[]>(new dtype[oldarray.shape.get_total_size()]);
+        shape = Shape(oldarray.shape);
+    }
     // Move constructor
-    NArray(NArray&& other) noexcept : data(std::move(other.data)), shape(std::move(other.shape)) {}
+    NArray(NArray&& other) noexcept : data_ptr(std::move(other.data_ptr)), shape(std::move(other.shape)) {}
     // Repeat constructor
-    NArray(uint32_t count, dtype val = 0) : data(count, val), shape({count}) {}
+    NArray(uint32_t count, dtype val = 0) : data_ptr(new dtype[count]), shape({count}) {
+        for(int i = 0; i < count; i++)
+            data_ptr[i] = val;
+    }
 
     /* N-Dimensional contructors */
     // Recursive constructor
@@ -159,27 +193,38 @@ public:
         }
 
         // Reserve space for values
-        data.reserve(shape.get_total_size());
+        data_ptr = std::shared_ptr<dtype[]>(new dtype[shape.get_total_size()]());
 
         // Add values
+        size_t offset = 0;
         for (const NArray& sub : arr) {
-            data.insert(data.end(), sub.data.begin(), sub.data.end());
+            size_t sz = sub.shape.get_total_size();
+            std::copy(sub.data_ptr.get(), sub.data_ptr.get() + sz, data_ptr.get() + offset);
+            offset += sz;
         }
     }
-    // Data + shape constructor
-    NArray(std::vector<dtype>&& vec, Shape&& shape) : data(std::move(vec)), shape(shape) {
-        if (this->shape.get_total_size() != data.size()) {
+    // Data + shape constructor (move)
+    NArray(std::vector<dtype>&& vec, std::initializer_list<uint32_t> sh) : data_ptr(new dtype[data.size()]), shape(sh) {
+        std::move(vec.begin(), vec.end(), data_ptr.get());
+
+        if (this->shape.get_total_size() != vec.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
     }
-    NArray(const std::vector<dtype>& vec, const Shape& shape) : data(vec), shape(shape) {
-        if (this->shape.get_total_size() != data.size()) {
+    // Data + shape constructor (copy)
+    NArray(const std::vector<dtype>& vec, std::initializer_list<uint32_t> sh) : data_ptr(new dtype[vec.size]), shape(sh) {
+        for(int i = 0; i < vec.size(); i++)
+            data_ptr[i] = data[i];
+        
+        if (this->shape.get_total_size() != vec.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
     }
     // Shape + initializer value constructor
-    NArray(const Shape& shape, dtype val = 0) : data(shape.get_total_size(), val), shape(shape) {}
-    NArray(Shape&& shape, dtype val = 0) noexcept : data(shape.get_total_size(), val), shape(std::move(shape)) {}
+    NArray(std::initializer_list<uint32_t> shape, dtype val = 0) : data(new dtype[shape.get_total_size()]), shape(shape) {
+        for(int i = 0; i < shape.get_total_size(); i++)
+            data_ptr[i] = val;
+    }
 
 
 
