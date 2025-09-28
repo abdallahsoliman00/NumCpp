@@ -19,12 +19,8 @@ namespace numcpp {
 template <typename dtype = double>
 class NArray {
 protected:
-    // TODO: Add std::default_delete<dtype[]>() as the default deleter to the constructors
 
-    // TODO: Change the entire data storage system to mimic numpy better.
-    // make data a shared pointer that points to the data unless a copy is called
-
-    std::shared_ptr<dtype[]> data_ptr;
+    std::shared_ptr<dtype> data_ptr;
     Shape shape;
 
     // Checks if two shapes are the same
@@ -36,7 +32,7 @@ protected:
     NArray elementWiseOp(const NArray &other, std::function<dtype(dtype, dtype)> func) const {
         NArray<dtype> out(this->shape);
         for(size_t i = 0; i < shape.get_total_size(); i++) {
-            out.data_ptr[i] = func(data_ptr[i], other.data_ptr[i]);
+            out.get_data()[i] = func(this->get_data()[i], other.get_data()[i]);
         }
         return out;
     }
@@ -44,8 +40,8 @@ protected:
     // Right scalar operation to NArrays
     NArray fullVecOpR(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
         std::vector<dtype> newVec(shape.get_total_size());
-        for(int i = 0; i < shape.get_total_size(); i++) {
-            newVec[i] = func(data_ptr[i], scalar);
+        for(size_t i = 0; i < shape.get_total_size(); i++) {
+            newVec[i] = func(get_data()[i], scalar);
         }
         return NArray(std::move(newVec), shape);
     }
@@ -53,8 +49,8 @@ protected:
     // Left scalar operation to NArrays
     NArray fullVecOpL(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
         std::vector<dtype> newVec(shape.get_total_size());
-        for(int i = 0; i < shape.get_total_size(); i++) {
-            newVec[i] = func(scalar, data_ptr[i]);
+        for(size_t i = 0; i < shape.get_total_size(); i++) {
+            newVec[i] = func(scalar, get_data()[i]);
         }
         return NArray(std::move(newVec), shape);
     }
@@ -66,8 +62,8 @@ protected:
         }
         else {
             std::vector<bool> newVec(shape.get_total_size());
-            for(int i = 0; i < shape.get_total_size(); i++) {
-                newVec[i] = comparison_func(data_ptr[i], other.data_ptr[i]);
+            for(size_t i = 0; i < shape.get_total_size(); i++) {
+                newVec[i] = comparison_func(get_data()[i], other.get_data()[i]);
             }
             return NArray<bool>(newVec, shape);
         }
@@ -76,11 +72,11 @@ protected:
     // Print a 1D array
     static void OneDPrint(std::ostream& os, const NArray& arr) {
         os << '[';
-        for(int i = 0; i < arr.shape[0]; i++) {
+        for(size_t i = 0; i < arr.shape[0]; i++) {
         if constexpr (std::is_same_v<dtype, bool>) {
-            os << (arr.data_ptr[i] ? "true" : "false");
+            os << (arr.get_data()[i] ? "true" : "false");
         } else {
-            os << arr.data_ptr[i];
+            os << arr.get_data()[i];
         }
             if(i != arr.shape[0] - 1) os << ", ";
         }
@@ -132,7 +128,7 @@ public:
 
 
     // Scalar constructor
-    NArray(const dtype& scalar) : data_ptr(new dtype[1]), shape({1}) { data_ptr[0] = scalar; }
+    NArray(const dtype& scalar) : data_ptr(new dtype[1], std::default_delete<dtype[]>()), shape({1}) { data_ptr[0] = scalar; }
 
     
     // Iterator constructor
@@ -141,28 +137,37 @@ public:
         : data_ptr(new dtype[std::distance(first, last)], std::default_delete<dtype[]>()),
         shape({std::distance(first, last)})
     {
-        int i = 0;
+        size_t i = 0;
         for (auto it = first; it != last; ++it, ++i) {
-            data_ptr[i] = *it;
+            data_ptr.get()[i] = *it;
         }
     }
 
 
     // Vector constructor
-    NArray(const std::vector<dtype>& data) : data_ptr(new dtype[data.size()]), shape({static_cast<size_t>(data.size())}) {
-        for(int i = 0; i < data.size(); i++)
-            data_ptr[i] = data[i];
+    NArray(const std::vector<dtype>& data) :
+        data_ptr(new dtype[data.size()], std::default_delete<dtype[]>()),
+        shape({static_cast<size_t>(data.size())})
+    {
+        for(size_t i = 0; i < data.size(); i++)
+            data_ptr.get()[i] = data[i];
     }
-    NArray(std::vector<dtype>&& data) : data_ptr(new dtype[data.size()]), shape({data.size()}) {
+    NArray(std::vector<dtype>&& data) :
+        data_ptr(new dtype[data.size()], std::default_delete<dtype[]>()),
+        shape({data.size()})
+    {
         std::move(data.begin(), data.end(), data_ptr.get());
     }
 
 
     // List constructor
-    NArray(std::initializer_list<dtype> list) : data_ptr(new dtype[list.size()]), shape({static_cast<size_t>(list.size())}) {
-        int i = 0;
+    NArray(std::initializer_list<dtype> list) :
+        data_ptr(new dtype[list.size()], std::default_delete<dtype[]>()),
+        shape({static_cast<size_t>(list.size())})
+    {
+        size_t i = 0;
         for(auto item : list)
-            data_ptr[i++] = item;
+            data_ptr.get()[i++] = item;
     }
 
 
@@ -171,7 +176,10 @@ public:
 
 
     // Array constructor from heap array (copy)
-    NArray(copy_t, dtype *array, const size_t& size) : data_ptr(new dtype[size]), shape({size}) {
+    NArray(copy_t, dtype *array, const size_t& size) :
+        data_ptr(new dtype[size], std::default_delete<dtype[]>()),
+        shape({size})
+    {
         // Use numcpp::copy as the first argument to copy
         std::copy(array, array + size, data_ptr.get());
     }
@@ -179,14 +187,17 @@ public:
 
     // Array constructor from stack array
     template <size_t N>
-    NArray(dtype (&array)[N]) : data_ptr(new dtype[N]), shape({N}) {
-        for(int i = 0; i < N; i++)
+    NArray(dtype (&array)[N]) : data_ptr(new dtype[N], std::default_delete<dtype[]>()), shape({N}) {
+        for(size_t i = 0; i < N; i++)
             data_ptr[i] = array[i];
     }
 
 
     // Copy constructor
-    NArray(const NArray& oldarray) : data_ptr(new dtype[oldarray.shape.get_total_size()]), shape(oldarray.shape) {
+    NArray(const NArray& oldarray) :
+        data_ptr(new dtype[oldarray.shape.get_total_size()], std::default_delete<dtype[]>()),
+        shape(oldarray.shape)
+    {
         std::copy(
             oldarray.data_ptr.get(),
             oldarray.data_ptr.get() + oldarray.shape.get_total_size(),
@@ -200,8 +211,11 @@ public:
 
 
     // Repeat constructor
-    NArray(size_t count, dtype val = 0) : data_ptr(new dtype[count]), shape({count}) {
-        for(int i = 0; i < count; i++)
+    NArray(size_t count, dtype val = 0) :
+        data_ptr(new dtype[count], std::default_delete<dtype[]>()),
+        shape({count})
+    {
+        for(size_t i = 0; i < count; i++)
             data_ptr[i] = val;
     }
 
@@ -229,7 +243,7 @@ public:
         }
 
         // Reserve space for values
-        data_ptr = std::shared_ptr<dtype[]>(new dtype[shape.get_total_size()]());
+        data_ptr = std::shared_ptr<dtype>(new dtype[shape.get_total_size()], std::default_delete<dtype[]>());
 
         // Add values
         size_t offset = 0;
@@ -242,7 +256,10 @@ public:
 
 
     // Data + shape constructor (move)
-    NArray(std::vector<dtype>&& vec, const Shape& sh) : data_ptr(new dtype[vec.size()]), shape(sh) {
+    NArray(std::vector<dtype>&& vec, const Shape& sh) :
+        data_ptr(new dtype[vec.size()], std::default_delete<dtype[]>()),
+        shape(sh)
+    {
         std::move(vec.begin(), vec.end(), data_ptr.get());
 
         if (this->shape.get_total_size() != vec.size()) {
@@ -252,9 +269,12 @@ public:
 
 
     // Data + shape constructor (copy)
-    NArray(const std::vector<dtype>& vec, const Shape& sh) : data_ptr(new dtype[vec.size]), shape(sh) {
-        for(int i = 0; i < vec.size(); i++)
-            data_ptr[i] = vec[i];
+    NArray(const std::vector<dtype>& vec, const Shape& sh) :
+        data_ptr(new dtype[vec.size()], std::default_delete<dtype[]>()),
+        shape(sh)
+    {
+        for(size_t i = 0; i < vec.size(); i++)
+            data_ptr.get()[i] = vec[i];
         
         if (this->shape.get_total_size() != vec.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
@@ -263,9 +283,12 @@ public:
 
 
     // Shape + initializer value constructor
-    NArray(const Shape& shape, dtype val = 0) : data_ptr(new dtype[shape.get_total_size()]), shape(shape) {
-        for(int i = 0; i < shape.get_total_size(); i++)
-            data_ptr[i] = val;
+    NArray(const Shape& shape, dtype val = 0) :
+        data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
+        shape(shape)
+    {
+        for(size_t i = 0; i < shape.get_total_size(); i++)
+            data_ptr.get()[i] = val;
     }
 
 
@@ -275,8 +298,8 @@ public:
 
 
     // Shared pointer + shape constructor
-    NArray(std::shared_ptr<dtype[]> sp, const Shape& sh) : data_ptr(sp), shape(sh) {}
-    NArray(std::shared_ptr<dtype[]>&& sp, const Shape& sh) : data_ptr(std::move(sp)), shape(sh) {}
+    NArray(std::shared_ptr<dtype> sp, const Shape& sh) : data_ptr(sp), shape(sh) {}
+    NArray(std::shared_ptr<dtype>&& sp, const Shape& sh) : data_ptr(std::move(sp)), shape(sh) {}
 
 
 
@@ -421,8 +444,8 @@ public:
     }
 
     // Returns a shared pointer to newly allocated heap memory with the data
-    std::shared_ptr<dtype[]> get_data_copy_as_shared_ptr() const {
-        std::shared_ptr<dtype[]> out(new dtype[shape.get_total_size()]);
+    std::shared_ptr<dtype> get_data_copy_as_shared_ptr() const {
+        std::shared_ptr<dtype> out(new dtype[shape.get_total_size()], std::default_delete<dtype[]>());
         std::copy(data_ptr.get(), data_ptr.get() + shape.get_total_size(), out.get());
         return out;
     }
@@ -431,7 +454,7 @@ public:
     // Returns a NEW transposed matrix
     NArray transpose() const {
         auto out_shape = shape.transpose();
-        std::shared_ptr<dtype[]> out_data_ptr(new dtype[shape.get_total_size()]);
+        std::shared_ptr<dtype> out_data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>());
         util::transpose(out_data_ptr.get(), data_ptr.get(), shape);
         return NArray(out_data_ptr, out_shape);
     }
@@ -441,6 +464,9 @@ public:
 
     // Returns a flat view of the array
     NArray ravel() { return NArray(data_ptr, shape.flatten()); }
+
+    // Returns a copy of the array
+    NArray copy() { return NArray(*this); }
 
 };
 
