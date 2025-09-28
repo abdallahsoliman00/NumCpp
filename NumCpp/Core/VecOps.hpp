@@ -1,6 +1,8 @@
 /* VecOps.hpp */
 #pragma once
 
+#include <cmath>
+
 #include "Shape.hpp"
 #include "NArray.hpp"
 #include "Matrix.hpp"
@@ -28,6 +30,16 @@ NArray<dtype> dot(const NArray<dtype>& larr, const NArray<dtype>& rarr) {
 template <typename dtype>
 Matrix<dtype> dot(const Matrix<dtype>& larr, const Matrix<dtype>& rarr) {
     return larr * rarr;
+}
+
+template <typename dtype>
+NArray<dtype> pow(const NArray<dtype>& arr, const int& exponent) {
+    NArray<dtype> out(arr);
+    dtype* data = out.get_data();
+    for(int i = 0; i < arr.get_shape().get_total_size(); i++) {
+        data[i] = std::pow(data[i], exponent);
+    }
+    return out;
 }
 
 template <typename dtype>

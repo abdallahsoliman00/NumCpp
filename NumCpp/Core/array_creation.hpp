@@ -8,7 +8,7 @@
 namespace numcpp {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
     template <typename T = double>
-    NArray<T> zeros(const uint32_t& size) {
+    NArray<T> zeros(const size_t& size) {
         return NArray<T>(size, static_cast<T>(0));
     }
     template <typename T = double>
@@ -26,7 +26,7 @@ namespace numcpp {
     }
 
     template <typename T = double>
-    NArray<T> ones(const uint32_t& size) {
+    NArray<T> ones(const size_t& size) {
         return NArray<T>(size, static_cast<T>(1));
     }
     template <typename T = double>
@@ -39,33 +39,33 @@ namespace numcpp {
         return NArray<T>(other.get_shape(), static_cast<T>(1));
     }
 
-    NArray<double> linspace(const float& start, const float& stop, const uint32_t& count, const bool& endpoint = true) {
+    NArray<double> linspace(const float& start, const float& stop, const size_t& count, const bool& endpoint = true) {
         float step = (stop - start)/(count - static_cast<float>(endpoint));
         std::vector<double> out(count, start);
 
-        for(uint32_t i = 1; i < count; i++) {
+        for(size_t i = 1; i < count; i++) {
             out[i] += step * i;
         }
         return NArray(out);
     }
 
     NArray<double> arange(const float& start, const float& stop, const float& step = 1) {
-        uint32_t count = static_cast<uint32_t>(1 + (stop - start)/step);
-        std::vector<double> out(count, start);
+        size_t count = static_cast<size_t>(1 + (stop - start)/step);
+        std::vector<double> out(count);
 
-        for(uint32_t i = 1; i < count; i++) {
-            out[i] += step * i;
+        for(size_t i = 1; i < count; i++) {
+            out[i] = start + step * i;
         }
         return NArray(std::move(out));
     }
 
     template <typename T = double>
-    NArray<T> eye(uint32_t n, uint32_t m = 0) {
+    NArray<T> eye(size_t n, size_t m = 0) {
         if (m == 0) m = n;
 
         std::vector<T> out_data(n * m, static_cast<T>(0));
 
-        for (uint32_t i = 0; i < n && i < m; ++i) {
+        for (size_t i = 0; i < n && i < m; ++i) {
             out_data[i * m + i] = static_cast<T>(1);
         }
 
@@ -73,7 +73,7 @@ namespace numcpp {
     }
 
     template <typename T = double>
-    NArray<T> identity(uint32_t n) {
+    NArray<T> identity(size_t n) {
         return eye<T>(n);
     }
 } // namespace numcpp

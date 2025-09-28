@@ -9,7 +9,6 @@ namespace numcpp {
 template <typename dtype = double>
 class Matrix : public NArray<dtype> {
 protected:
-    // using NArray<dtype>::data;
     using NArray<dtype>::data_ptr;
     using NArray<dtype>::shape;
 
@@ -27,7 +26,7 @@ public:
 
     Matrix transpose() {
         auto out_shape = shape.transpose();
-        auto out_data_ptr = get_data_copy_as_shared_ptr();
+        auto out_data_ptr = this->get_data_copy_as_shared_ptr();
         util::transpose(out_data_ptr.get(), shape);
         return Matrix(out_data_ptr,out_shape);
     }

@@ -25,7 +25,6 @@ protected:
     // make data a shared pointer that points to the data unless a copy is called
 
     std::shared_ptr<dtype[]> data_ptr;
-    // std::vector<dtype> data;
     Shape shape;
 
     // Checks if two shapes are the same
@@ -36,7 +35,7 @@ protected:
     // Elementwise operation of two NArrays
     NArray elementWiseOp(const NArray &other, std::function<dtype(dtype, dtype)> func) const {
         NArray<dtype> out(this->shape);
-        for(uint32_t i = 0; i < shape.get_total_size(); i++) {
+        for(size_t i = 0; i < shape.get_total_size(); i++) {
             out.data_ptr[i] = func(data_ptr[i], other.data_ptr[i]);
         }
         return out;
@@ -97,13 +96,13 @@ protected:
         }
 
         // Take the first element and split 
-        uint32_t n_grps = sh[0];
+        size_t n_grps = sh[0];
         auto groups = util::split(data, n_grps);
 
         Shape subshape(sh.dimensions.begin() + 1, sh.dimensions.end());
         
         os << '[';
-        for (uint32_t i = 0; i < n_grps; i++) {
+        for (size_t i = 0; i < n_grps; i++) {
             recursivePrint(os, groups[i], subshape, depth + 1);
             if(i != n_grps - 1) {
                 if(depth % subshape[0] == 0)
@@ -115,13 +114,13 @@ protected:
         os << ']';
     }
 
-    uint32_t get_index(const int& index) const {
+    size_t get_index(const int& index) const {
         int size = static_cast<int>(shape[0]);
 
         if((index >= 0) && (index < size))
-            return static_cast<uint32_t>(index);
+            return static_cast<size_t>(index);
         else if((index < 0) && (index >= -size))
-            return static_cast<uint32_t>(index + size);
+            return static_cast<size_t>(index + size);
         else
             throw std::runtime_error("Index out of range.");
     }
@@ -150,17 +149,17 @@ public:
 
 
     // Vector constructor
-    NArray(const std::vector<dtype>& data) : data_ptr(new dtype[data.size()]), shape({static_cast<uint32_t>(data.size())}) {
+    NArray(const std::vector<dtype>& data) : data_ptr(new dtype[data.size()]), shape({static_cast<size_t>(data.size())}) {
         for(int i = 0; i < data.size(); i++)
             data_ptr[i] = data[i];
     }
-    NArray(std::vector<dtype>&& data) : data_ptr(new dtype[data.size()]), shape({data.size}) {
+    NArray(std::vector<dtype>&& data) : data_ptr(new dtype[data.size()]), shape({data.size()}) {
         std::move(data.begin(), data.end(), data_ptr.get());
     }
 
 
     // List constructor
-    NArray(std::initializer_list<dtype> list) : data_ptr(new dtype[list.size()]), shape({static_cast<uint32_t>(list.size())}) {
+    NArray(std::initializer_list<dtype> list) : data_ptr(new dtype[list.size()]), shape({static_cast<size_t>(list.size())}) {
         int i = 0;
         for(auto item : list)
             data_ptr[i++] = item;
@@ -168,18 +167,18 @@ public:
 
 
     // Array constructor from heap array (ownership takeover)
-    NArray(dtype *array, const uint32_t& size) : data_ptr(array), shape({size}) {}
+    NArray(dtype *array, const size_t& size) : data_ptr(array), shape({size}) {}
 
 
     // Array constructor from heap array (copy)
-    NArray(copy_t, dtype *array, const uint32_t& size) : data_ptr(new dtype[size]), shape({size}) {
+    NArray(copy_t, dtype *array, const size_t& size) : data_ptr(new dtype[size]), shape({size}) {
         // Use numcpp::copy as the first argument to copy
         std::copy(array, array + size, data_ptr.get());
     }
 
 
     // Array constructor from stack array
-    template <uint32_t N>
+    template <size_t N>
     NArray(dtype (&array)[N]) : data_ptr(new dtype[N]), shape({N}) {
         for(int i = 0; i < N; i++)
             data_ptr[i] = array[i];
@@ -201,7 +200,7 @@ public:
 
 
     // Repeat constructor
-    NArray(uint32_t count, dtype val = 0) : data_ptr(new dtype[count]), shape({count}) {
+    NArray(size_t count, dtype val = 0) : data_ptr(new dtype[count]), shape({count}) {
         for(int i = 0; i < count; i++)
             data_ptr[i] = val;
     }
@@ -394,7 +393,7 @@ public:
         case 2: { // Martix
             os << '[';
             auto grps = util::split(arr.get_data_as_vector(), arr.shape[0]);
-            for(uint32_t i = 0; i < grps.size(); i++) {
+            for(size_t i = 0; i < grps.size(); i++) {
                 OneDPrint(os, NArray(grps[i]));
                 if(i != grps.size() - 1) os << ",\n ";
             }
@@ -418,7 +417,7 @@ public:
 
     // Returns the data as an std::vector
     std::vector<dtype> get_data_as_vector() const {
-        return std::vector<dtype>(data_ptr.get(), data_ptr.get() + shape.get_total_size())
+        return std::vector<dtype>(data_ptr.get(), data_ptr.get() + shape.get_total_size());
     }
 
     // Returns a shared pointer to newly allocated heap memory with the data
@@ -457,11 +456,11 @@ NArray(std::initializer_list<T>) -> NArray<T>;
 
 // Array constructor
 template <typename T>
-NArray(T*, uint32_t) -> NArray<T>;
+NArray(T*, size_t) -> NArray<T>;
 
 // Repeat constructor
 template <typename T>
-NArray(uint32_t, T) -> NArray<T>;
+NArray(size_t, T) -> NArray<T>;
 
 // Data + Shape constructor
 template <typename T>

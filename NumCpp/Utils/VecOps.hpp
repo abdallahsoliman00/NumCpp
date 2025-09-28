@@ -77,11 +77,11 @@ template <typename dtype>
 std::vector<dtype> elementwiseOP(
     const dtype* larr,
     const dtype* rarr,
-    const uint32_t size,
+    const size_t size,
     std::function<dtype(dtype, dtype)> func
 ) {
     std::vector<dtype> out(size);
-    for(uint32_t i = 0; i < size; i++) {
+    for(size_t i = 0; i < size; i++) {
         out[i] = func(larr[i], rarr[i]);
     }
     return out;
