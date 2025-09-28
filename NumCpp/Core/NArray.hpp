@@ -128,7 +128,8 @@ public:
 
 
     // Scalar constructor
-    NArray(const dtype& scalar) : data_ptr(new dtype[1], std::default_delete<dtype[]>()), shape({1}) { data_ptr[0] = scalar; }
+    NArray(const dtype& scalar) : data_ptr(new dtype[1], std::default_delete<dtype[]>()), shape({1})
+        { data_ptr.get()[0] = scalar; }
 
     
     // Iterator constructor
@@ -399,10 +400,14 @@ public:
     /* Index Overload */
     NArray<dtype> operator[](const int& i) const {
         auto index = get_index(i);
-        auto slice_start = data_ptr.get() + shape[1] * index;
-        auto new_shape = Shape(shape.dimensions.begin() + 1, shape.dimensions.end());
 
-        return NArray<dtype>(data_ptr, slice_start, new_shape);
+        if (shape.get_Ndim() == 1) {
+            return NArray<dtype>(data_ptr, data_ptr.get() + index, Shape(1));
+        } else {
+            auto slice_start = data_ptr.get() + shape[1] * index;
+            auto new_shape = Shape(shape.dimensions.begin() + 1, shape.dimensions.end());
+            return NArray<dtype>(data_ptr, slice_start, new_shape);
+        }
     }
 
 
