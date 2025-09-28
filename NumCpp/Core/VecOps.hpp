@@ -35,8 +35,11 @@ NArray<dtype> hadamard(const NArray<dtype>& larr, const NArray<dtype>& rarr) {
     if(larr.get_shape() != rarr.get_shape())
         throw error::ShapeError(larr.get_shape(), rarr.get_shape(), "multiply");
     else {
-        std::vector<dtype> out_vec = util::elementwiseOP(larr.get_data(), rarr.get_data(), &util::multiply<dtype>);
-        return NArray<dtype>(out_vec, larr.get_shape());
+        std::vector<dtype> out_vec = util::elementwiseOP(
+            larr.get_data(), rarr.get_data(),
+            larr.get_shape().get_total_size(), &util::multiply<dtype>
+        );
+        return NArray<dtype>(std::move(out_vec), larr.get_shape());
     }
 }
 

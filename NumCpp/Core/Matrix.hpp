@@ -9,7 +9,8 @@ namespace numcpp {
 template <typename dtype = double>
 class Matrix : public NArray<dtype> {
 protected:
-    using NArray<dtype>::data;
+    // using NArray<dtype>::data;
+    using NArray<dtype>::data_ptr;
     using NArray<dtype>::shape;
 
 public:
@@ -26,8 +27,9 @@ public:
 
     Matrix transpose() {
         auto out_shape = shape.transpose();
-        auto out_data = util::transpose(data, shape);
-        return Matrix(out_data,out_shape);
+        auto out_data_ptr = get_data_copy_as_shared_ptr();
+        util::transpose(out_data_ptr.get(), shape);
+        return Matrix(out_data_ptr,out_shape);
     }
 
 
@@ -38,8 +40,8 @@ public:
             throw error::ShapeError(this->shape, other.shape, "multiply");
         }
         auto out_data = util::matmul(
-            this->data, this->shape,
-            other.data, other.shape
+            this->data_ptr.get(), this->shape,
+            other.data_ptr.get(), other.shape
         );
         auto out_shape = Shape::get_product_shape(this->shape, other.shape);
         return Matrix(out_data, out_shape);
@@ -53,11 +55,11 @@ public:
         if(this->shape.are_matrix_multipliable(other.get_shape())) {
             // Treat the NArray as a matrix for multiplication
             auto out_data = util::matmul(
-                this->data, this->shape,
+                this->get_data(), this->get_shape(),
                 other.get_data(), other.get_shape()
             );
             auto out_shape = Shape::get_product_shape(this->shape, other.get_shape());
-            return Matrix(out_data, out_shape);
+            return Matrix(std::move(out_data), out_shape);
         }
         
         throw error::ShapeError(this->shape, other.get_shape(), "multiply");

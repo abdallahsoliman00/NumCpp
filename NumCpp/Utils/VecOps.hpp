@@ -8,8 +8,8 @@ namespace numcpp::util {
 
 template <typename dtype>
 std::vector<dtype> matmul(
-    const std::vector<dtype>& larr, const Shape& lshape,
-    const std::vector<dtype>& rarr, const Shape& rshape
+    const dtype* larr, const Shape& lshape,
+    const dtype* rarr, const Shape& rshape
 ) {
     auto out_shape = Shape::get_product_shape(lshape, rshape);
     std::vector<dtype> out(out_shape.get_total_size(), static_cast<dtype>(0));
@@ -31,22 +31,32 @@ std::vector<dtype> matmul(
     return out;
 }
 
-
+// Takes in an array, transposes it in place
 template <typename dtype>
-std::vector<dtype> transpose(
-    const std::vector<dtype>& arr, const Shape& shape
-) {
-    std::vector<dtype> out(arr.size());
+void transpose(dtype* arr, const Shape& shape) {
+    std::vector<dtype> temp(arr, arr + shape.get_total_size());
     
     int rows = shape[0];
     int cols = shape[1];
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            out[j * rows + i] = arr[i * cols + j];
+            arr[j * rows + i] = temp[i * cols + j];
         }
     }
-    return out;
+}
+
+// Takes in an array to modify, the data, and transposes the array using the data 
+template <typename dtype>
+void transpose(dtype* arr, dtype* data_in, const Shape& shape) {
+    int rows = shape[0];
+    int cols = shape[1];
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            arr[j * rows + i] = data_in[i * cols + j];
+        }
+    }
 }
 
 
@@ -62,14 +72,16 @@ std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
 }
 
 
-template <typename T>
-std::vector<T> elementwiseOP(
-    const std::vector<T>& larr,
-    const std::vector<T>& rarr,
-    std::function<T(T, T)> func
+// Returns a vector of the elementwise multiplication of two input arrays
+template <typename dtype>
+std::vector<dtype> elementwiseOP(
+    const dtype* larr,
+    const dtype* rarr,
+    const uint32_t size,
+    std::function<dtype(dtype, dtype)> func
 ) {
-    std::vector<T> out(larr.size());
-    for(uint32_t i = 0; i < larr.size(); i++) {
+    std::vector<dtype> out(size);
+    for(uint32_t i = 0; i < size; i++) {
         out[i] = func(larr[i], rarr[i]);
     }
     return out;

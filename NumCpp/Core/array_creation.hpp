@@ -9,34 +9,34 @@ namespace numcpp {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
     template <typename T = double>
     NArray<T> zeros(const uint32_t& size) {
-        return NArray<T>(size);
+        return NArray<T>(size, static_cast<T>(0));
     }
     template <typename T = double>
     NArray<T> zeros(const Shape& shape) {
-        return NArray<T>(shape, 0.0f);
+        return NArray<T>(shape, static_cast<T>(0));
     }
 
     template <typename T = double>
     NArray<T> zeros_like(const NArray<T>& other) {
-        return NArray<T>(other.get_shape(), 0.0f);
+        return NArray<T>(other.get_shape(), static_cast<T>(0));
     }
     template <typename T = double>
     NArray<T> zeros_like(const std::vector<T>& other) {
-        return NArray<T>(other.size(), 0.0f);
+        return NArray<T>(other.size(), static_cast<T>(0));
     }
 
     template <typename T = double>
     NArray<T> ones(const uint32_t& size) {
-        return NArray<T>(size, 1.0f);
+        return NArray<T>(size, static_cast<T>(1));
     }
     template <typename T = double>
     NArray<T> ones(const Shape& shape) {
-        return NArray<T>(shape, 1.0f);
+        return NArray<T>(shape, static_cast<T>(1));
     }
 
     template <typename T = double>
     NArray<T> ones_like(const NArray<T>& other) {
-        return NArray<T>(other.get_shape(), 1.0f);
+        return NArray<T>(other.get_shape(), static_cast<T>(1));
     }
 
     NArray<double> linspace(const float& start, const float& stop, const uint32_t& count, const bool& endpoint = true) {
@@ -56,7 +56,7 @@ namespace numcpp {
         for(uint32_t i = 1; i < count; i++) {
             out[i] += step * i;
         }
-        return NArray(out);
+        return NArray(std::move(out));
     }
 
     template <typename T = double>
@@ -66,7 +66,7 @@ namespace numcpp {
         std::vector<T> out_data(n * m, static_cast<T>(0));
 
         for (uint32_t i = 0; i < n && i < m; ++i) {
-            out_data[i * m + i] = static_cast<T>(1); // row-major indexing
+            out_data[i * m + i] = static_cast<T>(1);
         }
 
         return NArray<T>(std::move(out_data), Shape({n, m}));

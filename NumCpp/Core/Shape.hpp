@@ -12,6 +12,8 @@ struct Shape {
 
     // Default constructor
     Shape() : dimensions({}) {}
+    // Scalar constructor
+    Shape(unsigned int num) : dimensions({num}) {}
     // Initializer constructor
     Shape(std::initializer_list<uint32_t> dims) :  dimensions(dims) {}
     // Copy constructor
@@ -29,8 +31,8 @@ struct Shape {
     // Changes the shape
     void reshape(const std::initializer_list<uint32_t>& dims) { dimensions = std::move(dims); }
 
-    // Flattens the shape
-    void flatten() { dimensions = {get_total_size()};}
+    // Returns a new flat shape
+    Shape flatten() { return Shape({get_total_size()}); }
 
     // Returns the total number of dimensions is a shape
     uint32_t get_Ndim() const { return dimensions.size(); }
