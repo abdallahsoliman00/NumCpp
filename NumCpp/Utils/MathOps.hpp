@@ -44,4 +44,4 @@ template <typename T> T greater_than(T a, T b) {
     return a > b;
 }
 
-}
+} // namespace numcpp::util

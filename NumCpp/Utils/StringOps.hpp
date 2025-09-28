@@ -13,4 +13,4 @@ std::string toString(const T& obj) {
     return oss.str();
 }
 
-}
+} // namespace numcpp::util

@@ -397,6 +397,7 @@ public:
         return elementwiseCompare(other, &util::greater_than<dtype>);
     }
 
+    // TODO: Add slicing that allows editing the elements
     /* Index Overload */
     NArray<dtype> operator[](const int& i) const {
         auto index = get_index(i);
@@ -475,8 +476,11 @@ public:
 
 };
 
-// TODO: Add deduction guides for the new constructors
 /* Deduction guides */
+// Scalar constructor
+template < typename T>
+NArray(T) -> NArray<T>;
+
 // Vector constructor
 template <typename T>
 NArray(std::vector<T>) -> NArray<T>;
@@ -489,6 +493,10 @@ NArray(std::initializer_list<T>) -> NArray<T>;
 template <typename T>
 NArray(T*, size_t) -> NArray<T>;
 
+// Array constructor (copy)
+template <typename T>
+NArray(copy_t, T*, size_t) -> NArray<T>;
+
 // Repeat constructor
 template <typename T>
 NArray(size_t, T) -> NArray<T>;
@@ -496,5 +504,17 @@ NArray(size_t, T) -> NArray<T>;
 // Data + Shape constructor
 template <typename T>
 NArray(std::vector<T>, Shape) -> NArray<T>;
+
+// Shape + initializer value constructor
+template < typename T>
+NArray(Shape, T) -> NArray<T>;
+
+// Constructor from shared_ptr (used for slicing)
+template < typename T>
+NArray(std::shared_ptr<T>, T*, Shape) -> NArray<T>;
+
+// Shared pointer + shape constructor
+template <typename T>
+NArray(std::shared_ptr<T>, Shape) -> NArray<T>;
 
 } // namespace numcpp
