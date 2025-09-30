@@ -99,13 +99,14 @@ protected:
         
         os << '[';
         for (size_t i = 0; i < n_grps; i++) {
-            recursivePrint(os, groups[i], subshape, depth + 1);
-            if(i != n_grps - 1) {
-                if(depth % subshape[0] == 0)
-                    os << ",\n\n";
+            if (i > 0) {
+                os << ",";
+                if (depth == 0)
+                    os << "\n\n";
                 else
-                    os << ",\n" << std::string(n_grps, ' ');
+                    os << "\n" << std::string(depth + 1, ' ');
             }
+            recursivePrint(os, groups[i], subshape, depth + 1);
         }
         os << ']';
     }
@@ -135,9 +136,12 @@ public:
     // Iterator constructor
     template <typename Iter>
     NArray(Iter first, Iter last)
-        : data_ptr(new dtype[std::distance(first, last)], std::default_delete<dtype[]>()),
-        shape({std::distance(first, last)})
+        : data_ptr(new dtype[static_cast<size_t>(std::distance(first, last))], std::default_delete<dtype[]>()),
+        shape(static_cast<size_t>(std::distance(first, last)))
     {
+        if (std::distance(first, last) < 0)
+            throw std::invalid_argument("NArray: iterator range is invalid (last before first)");
+
         size_t i = 0;
         for (auto it = first; it != last; ++it, ++i) {
             data_ptr.get()[i] = *it;
@@ -217,7 +221,7 @@ public:
         shape({count})
     {
         for(size_t i = 0; i < count; i++)
-            data_ptr[i] = val;
+            data_ptr.get()[i] = val;
     }
 
 
@@ -376,6 +380,7 @@ public:
     friend NArray operator/(T num, const NArray& arr) {
         return arr.fullVecOpL(static_cast<dtype>(num), &util::divide<dtype>);
     }
+    // TODO: ^ operator overload to do powers
 
     /* Equality Overloads */
     NArray<bool> operator==(const NArray& other) const {
@@ -398,6 +403,8 @@ public:
     }
 
     // TODO: Add slicing that allows editing the elements
+    // this can be done by overloading the = operator such that if
+    // both left and right elements are the same shape, they can be changed
     /* Index Overload */
     NArray<dtype> operator[](const int& i) const {
         auto index = get_index(i);
@@ -412,11 +419,15 @@ public:
     }
 
 
+    // TODO: Print all numbers to have the same length i.e:
+    // [1  , 10 , 100]
+    // [20 , 1  , 100]
     /* Print Overload */
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
         switch(arr.shape.get_Ndim()) {
         case 1: // 1D vector
-            OneDPrint(os, arr);
+            if(arr.shape[0] == 1) os << *(arr.get_data());
+            else OneDPrint(os, arr);
             break;
 
         case 2: { // Martix
@@ -508,6 +519,9 @@ NArray(std::vector<T>, Shape) -> NArray<T>;
 // Shape + initializer value constructor
 template < typename T>
 NArray(Shape, T) -> NArray<T>;
+
+template < typename T>
+NArray(std::initializer_list<size_t>, T) -> NArray<T>;
 
 // Constructor from shared_ptr (used for slicing)
 template < typename T>
