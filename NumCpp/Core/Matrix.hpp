@@ -9,8 +9,8 @@ namespace numcpp {
 template <typename dtype = double>
 class Matrix : public NArray<dtype> {
 protected:
-    using NArray<dtype>::data_ptr;
-    using NArray<dtype>::shape;
+    using NArray<dtype>::_data_ptr;
+    using NArray<dtype>::_shape;
 
 public:
     /* Constructors */
@@ -21,13 +21,13 @@ public:
 
     /* Helper Functions */
     bool are_multipliable(const Matrix<dtype>& other) const {
-        return this->shape.are_matrix_multipliable(other.shape);
+        return this->_shape.are_matrix_multipliable(other._shape);
     }
 
     Matrix transpose() {
-        auto out_shape = shape.transpose();
+        auto out_shape = _shape.transpose();
         auto out_data_ptr = this->get_data_copy_as_shared_ptr();
-        util::transpose(out_data_ptr.get(), shape);
+        util::transpose(out_data_ptr.get(), _shape);
         return Matrix(out_data_ptr,out_shape);
     }
 
@@ -36,13 +36,13 @@ public:
     // Multiplication Overloads
     Matrix<dtype> operator*(const Matrix<dtype>& other) const {
         if (!this->are_multipliable(other)) {
-            throw error::ShapeError(this->shape, other.shape, "multiply");
+            throw error::ShapeError(this->_shape, other._shape, "multiply");
         }
         auto out_data = util::matmul(
-            this->data_ptr.get(), this->shape,
-            other.data_ptr.get(), other.shape
+            this->_data_ptr.get(), this->_shape,
+            other._data_ptr.get(), other._shape
         );
-        auto out_shape = Shape::get_product_shape(this->shape, other.shape);
+        auto out_shape = Shape::get_product_shape(this->_shape, other._shape);
         return Matrix(out_data, out_shape);
     }
     NArray<dtype> operator*(const NArray<dtype>& other) const override {
@@ -51,17 +51,17 @@ public:
         }
         
         // Check if it's a valid 2D NArray that can be treated as a matrix
-        if(this->shape.are_matrix_multipliable(other.get_shape())) {
+        if(this->_shape.are_matrix_multipliable(other.get_shape())) {
             // Treat the NArray as a matrix for multiplication
             auto out_data = util::matmul(
                 this->get_data(), this->get_shape(),
                 other.get_data(), other.get_shape()
             );
-            auto out_shape = Shape::get_product_shape(this->shape, other.get_shape());
+            auto out_shape = Shape::get_product_shape(this->_shape, other.get_shape());
             return Matrix(std::move(out_data), out_shape);
         }
         
-        throw error::ShapeError(this->shape, other.get_shape(), "multiply");
+        throw error::ShapeError(this->_shape, other.get_shape(), "multiply");
     }
 
 };
