@@ -30,4 +30,18 @@ public:
 
 };
 
+
+class ConversionError : public std::domain_error {
+public:
+    ConversionError(const Shape& shape, std::string&& type)
+        : std::domain_error(
+            "[ConversionError]: Unble to convert array of shape " +
+            util::toString(shape) + " to " + std::move(type) + "."
+        )
+    {
+        std::cerr << what() << std::endl;
+    }
+
+};
+
 } // namespace numcpp::error

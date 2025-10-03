@@ -25,11 +25,38 @@ NArray<dtype> matmul(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
 
 template <typename dtype>
 NArray<dtype> dot(const NArray<dtype>& larr, const NArray<dtype>& rarr) {
-    return larr * rarr;
+    if(larr.get_shape().get_Ndim() == 1) {
+        if(!larr.same_shape(rarr))
+            error::ShapeError(larr.get_shape(), rarr.get_shape(), "dot");
+        else {
+            dtype sum = 0;
+            for(size_t i = 0; i < larr.get_total_size(); i++)
+                sum += (larr.get_data()[i] * rarr.get_data()[i]);
+            return NArray(sum);
+        }
+    } else if(larr.get_shape().get_Ndim() == 2){
+        return matmul(larr, rarr);
+    } else error::ShapeError(larr.get_shape(), rarr.get_shape(), "dot");
 }
+
 template <typename dtype>
 Matrix<dtype> dot(const Matrix<dtype>& larr, const Matrix<dtype>& rarr) {
     return larr * rarr;
+}
+
+template <typename dtype>
+dtype dot(dtype a, dtype b) { return a * b; }
+
+template <typename dtype>
+dtype vdot(const NArray<dtype>& a, const NArray<dtype>& b) {
+    if(!a.same_shape(b))
+        error::ShapeError(larr.get_shape(), rarr.get_shape(), "dot");
+
+    dtype sum = 0;
+    for(size_t i = 0; i < a.get_total_size(); i++)
+        sum += (a.get_data()[i] * b.get_data()[i]);
+
+    return sum;
 }
 
 template <typename dtype>

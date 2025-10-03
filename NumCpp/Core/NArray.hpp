@@ -22,11 +22,6 @@ protected:
 
     std::shared_ptr<dtype> _data_ptr;
     Shape _shape;
-
-    // Checks if two shapes are the same
-    bool same_shape(const NArray& other) const {
-        return _shape.same_shape(other._shape);
-    }
     
     // Elementwise operation of two NArrays
     NArray elementWiseOp(const NArray &other, std::function<dtype(dtype, dtype)> func) const {
@@ -74,11 +69,11 @@ protected:
         os << '[';
         for(size_t i = 0; i < arr._shape[0]; i++) {
         if constexpr (std::is_same_v<dtype, bool>) {
-            os << (arr.get_data()[i] ? "true" : "false");
+            os << (arr.get_data()[i] ? " true" : " false");
         } else {
             os << arr.get_data()[i];
         }
-            if(i != arr._shape[0] - 1) os << ", ";
+            if(i != arr._shape[0] - 1) os << " ";
         }
         os << ']';
     }
@@ -129,14 +124,14 @@ public:
 
 
     // Scalar constructor
-    NArray(const dtype& scalar) : _data_ptr(new dtype[1], std::default_delete<dtype[]>()), _shape({1})
-        { _data_ptr.get()[0] = scalar; }
+    NArray(const dtype& num) : _data_ptr(new dtype[1], std::default_delete<dtype[]>()), _shape({1})
+        { _data_ptr.get()[0] = num; }
 
     
     // Iterator constructor
     template <typename Iter>
-    NArray(Iter first, Iter last)
-        : _data_ptr(new dtype[static_cast<size_t>(std::distance(first, last))], std::default_delete<dtype[]>()),
+    NArray(Iter first, Iter last) :
+        _data_ptr(new dtype[static_cast<size_t>(std::distance(first, last))], std::default_delete<dtype[]>()),
         _shape(static_cast<size_t>(std::distance(first, last)))
     {
         if (std::distance(first, last) < 0)
@@ -339,6 +334,12 @@ public:
     }
 
     /* Scalar Overloads */
+    // Exponent overload
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    NArray operator^(T num) const {
+        return fullVecOpR(static_cast<dtype>(num), &util::pow<dtype>);
+    }
+
     // Right addition overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator+(T num) const {
@@ -380,9 +381,9 @@ public:
     friend NArray operator/(T num, const NArray& arr) {
         return arr.fullVecOpL(static_cast<dtype>(num), &util::divide<dtype>);
     }
-    // TODO: ^ operator overload to do powers
 
-    /* Equality Overloads */
+
+    /* Comparison Overloads */
     NArray<bool> operator==(const NArray& other) const {
         return elementwiseCompare(other, &util::eq<dtype>);
     }
@@ -435,7 +436,7 @@ public:
             auto grps = util::split(arr.get_data_as_vector(), arr._shape[0]);
             for(size_t i = 0; i < grps.size(); i++) {
                 OneDPrint(os, NArray(grps[i]));
-                if(i != grps.size() - 1) os << ",\n ";
+                if(i != grps.size() - 1) os << "\n ";
             }
             os << ']';
             break;
@@ -447,6 +448,33 @@ public:
         }
         return os;
     }
+
+    /* ====== Conversion Operators ====== */
+    explicit operator int() const {
+        if (_shape.get_total_size() == 1)
+            return static_cast<int>(get_data()[0]);
+        else
+            error::ConversionError(_shape, "int");
+    }
+
+    explicit operator long long() const {
+        if (_shape.get_total_size() == 1)
+            return static_cast<long long>(get_data()[0]);
+        else
+            error::ConversionError(_shape, "long long");
+    }
+
+    explicit operator double() const {
+        if (_shape.get_total_size() == 1)
+            return static_cast<double>(get_data()[0]);
+        else
+            error::ConversionError(_shape, "double");
+    }
+
+    explicit operator bool() const {
+        return (_shape.get_total_size() != 0) && (get_data()[0] != 0);
+    }
+
 
     /* Helper functions */
     // Fetches the NArray shape
@@ -466,6 +494,16 @@ public:
         std::copy(_data_ptr.get(), _data_ptr.get() + _shape.get_total_size(), out.get());
         return out;
     }
+
+    // Checks if two shapes are the same
+    bool same_shape(const NArray& other) const {
+        return _shape.same_shape(other._shape);
+    }
+
+    size_t get_total_size() const {
+        return _shape.get_total_size();
+    }
+
 
     /* NArray functions */
     // Returns a NEW transposed matrix
