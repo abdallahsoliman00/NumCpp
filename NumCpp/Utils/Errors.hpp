@@ -17,7 +17,6 @@ public:
     {
         std::cerr << what() << std::endl;
     }
-
 };
 
 class ValueError : public std::runtime_error {
@@ -27,7 +26,6 @@ public:
     {
         std::cerr << what() << std::endl;
     }
-
 };
 
 
@@ -41,7 +39,6 @@ public:
     {
         std::cerr << what() << std::endl;
     }
-
 };
 
 } // namespace numcpp::error

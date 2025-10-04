@@ -24,24 +24,24 @@ NArray<dtype> matmul(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
 }
 
 template <typename dtype>
-NArray<dtype> dot(const NArray<dtype>& larr, const NArray<dtype>& rarr) {
-    if(larr.get_shape().get_Ndim() == 1) {
-        if(!larr.same_shape(rarr))
-            error::ShapeError(larr.get_shape(), rarr.get_shape(), "dot");
+NArray<dtype> dot(const NArray<dtype>& a, const NArray<dtype>& b) {
+    if(a.get_shape().get_Ndim() == 1) {
+        if(!a.same_shape(b))
+            error::ShapeError(a.get_shape(), b.get_shape(), "dot");
         else {
             dtype sum = 0;
-            for(size_t i = 0; i < larr.get_total_size(); i++)
-                sum += (larr.get_data()[i] * rarr.get_data()[i]);
+            for(size_t i = 0; i < a.get_total_size(); i++)
+                sum += (a.get_data()[i] * b.get_data()[i]);
             return NArray(sum);
         }
-    } else if(larr.get_shape().get_Ndim() == 2){
-        return matmul(larr, rarr);
-    } else error::ShapeError(larr.get_shape(), rarr.get_shape(), "dot");
+    } else if(a.get_shape().get_Ndim() == 2){
+        return matmul(a, b);
+    } else error::ShapeError(a.get_shape(), b.get_shape(), "dot");
 }
 
 template <typename dtype>
-Matrix<dtype> dot(const Matrix<dtype>& larr, const Matrix<dtype>& rarr) {
-    return larr * rarr;
+Matrix<dtype> dot(const Matrix<dtype>& a, const Matrix<dtype>& b) {
+    return a * b;
 }
 
 template <typename dtype>
@@ -50,7 +50,7 @@ dtype dot(dtype a, dtype b) { return a * b; }
 template <typename dtype>
 dtype vdot(const NArray<dtype>& a, const NArray<dtype>& b) {
     if(!a.same_shape(b))
-        error::ShapeError(larr.get_shape(), rarr.get_shape(), "dot");
+        error::ShapeError(a.get_shape(), b.get_shape(), "dot");
 
     dtype sum = 0;
     for(size_t i = 0; i < a.get_total_size(); i++)
@@ -67,6 +67,11 @@ NArray<dtype> pow(const NArray<dtype>& arr, const int& exponent) {
         data[i] = std::pow(data[i], exponent);
     }
     return out;
+}
+
+template <typename T, typename U>
+inline auto pow(T base, U exponent) -> decltype(std::pow(base, exponent)) {
+    return std::pow(base, exponent);
 }
 
 template <typename dtype>

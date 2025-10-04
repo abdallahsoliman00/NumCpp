@@ -20,8 +20,56 @@ template <typename dtype = double>
 class NArray {
 protected:
 
+
     std::shared_ptr<dtype> _data_ptr;
     Shape _shape;
+
+
+    // Gets the total size required to store multiple NArrays
+    void get_size_requirements(size_t& size, int& depth, const NArray& arr) {
+        size += arr.get_total_size();
+        depth++;
+    }
+    template <typename... Arrays>
+    void get_size_requirements(
+        size_t& size, int& depth, 
+        const NArray& arr, const NArray& next, 
+        const Arrays&... rest
+    ) {
+        if(arr.same_shape(next)) {
+            size += arr.get_total_size();
+            depth++;
+            get_size_requirements(size, depth, next, rest...);
+        } else {
+            error::ValueError("Could not initialise array because subarrays do not have the same shape.");
+        }
+    }
+
+    // Adds the data to the array given the pointer
+    void add_data_to_data_ptr(
+        const std::shared_ptr<dtype>& data_ptr, size_t starting_pos,
+        const NArray& arr
+    ) {
+        std::copy(
+            arr._data_ptr.get(),
+            arr._data_ptr.get() + arr.get_total_size(),
+            data_ptr.get() + starting_pos
+        );
+    }
+    template <typename... Arrays>
+    void add_data_to_data_ptr(
+        const std::shared_ptr<dtype>& data_ptr, size_t starting_pos,
+        const NArray& first, const Arrays&... rest
+    ) {
+        // Copy first array's elements to data_ptr
+        std::copy(
+            first._data_ptr.get(),
+            first._data_ptr.get() + first.get_total_size(),
+            data_ptr.get() + starting_pos
+        );
+        // Pass the rest recursively
+        add_data_to_data_ptr(data_ptr, starting_pos + first.get_total_size(), rest...);
+    }
     
     // Elementwise operation of two NArrays
     NArray elementWiseOp(const NArray &other, std::function<dtype(dtype, dtype)> func) const {
@@ -116,6 +164,7 @@ protected:
         else
             throw std::runtime_error("Index out of range.");
     }
+
 
 public:
     /* ====== 1D constructors ====== */
@@ -301,6 +350,22 @@ public:
     NArray(std::shared_ptr<dtype> sp, const Shape& shape) : _data_ptr(sp), _shape(shape) {}
     NArray(std::shared_ptr<dtype>&& sp, const Shape& shape) : _data_ptr(std::move(sp)), _shape(shape) {}
 
+    // Constructor from other NArrays
+    template <typename... Arrays>
+    NArray(const NArray& first, const NArray& next, const Arrays&... rest) : _shape(first._shape) {
+        // Get size requirements for new NArray
+        size_t total_size = 0;
+        int new_dims = 0;
+        get_size_requirements(total_size, new_dims, first, next, rest...);
+
+        // Initialise _shape and _data_ptr
+        _shape.insert_dimension(new_dims, 0);
+        _data_ptr = std::shared_ptr<dtype>(new dtype[total_size], std::default_delete<dtype[]>());
+
+        // Add data
+        add_data_to_data_ptr(_data_ptr, 0, first, next, rest...);
+    }
+
 
 
     /* ====== Operator Overloading ====== */
@@ -472,7 +537,7 @@ public:
     }
 
     explicit operator bool() const {
-        return (_shape.get_total_size() != 0) && (get_data()[0] != 0);
+        return (_shape.get_total_size() != 0);
     }
 
 

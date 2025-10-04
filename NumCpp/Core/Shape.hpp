@@ -31,6 +31,11 @@ struct Shape {
     // Changes the shape
     void reshape(const std::initializer_list<size_t>& dims) { dimensions = std::move(dims); }
 
+    // Inserts a dimension at a specified position
+    void insert_dimension(size_t dimension, int position) {
+        dimensions.insert(dimensions.begin() + get_index(position), dimension);
+    }
+
     // Returns a new flat shape
     Shape flatten() const { return Shape({get_total_size()}); }
 
@@ -103,7 +108,7 @@ struct Shape {
     }
 
 private:
-    size_t get_index(const int& index) const {
+    size_t get_index(int index) const {
         int size = static_cast<int>(dimensions.size());
 
         if((index >= 0) && (index < size))
@@ -111,7 +116,7 @@ private:
         else if((index < 0) && (index >= -size))
             return static_cast<size_t>(index + size);
         else
-            throw std::runtime_error("Index out of range.\n");
+            throw std::runtime_error("Shape index out of range.\n");
     }
 };
 
