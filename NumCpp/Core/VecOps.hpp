@@ -11,32 +11,46 @@ namespace numcpp {
 
 template <typename dtype>
 NArray<dtype> matmul(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
-    if (!(lmat.get_shape().are_matrix_multipliable(rmat.get_shape()))) {
-        error::ShapeError(lmat.get_shape(), rmat.get_shape(), "multiply");
+    if(!static_cast<bool>(Shape::get_matmul_type(lmat.get_shape(), rmat.get_shape()))) {
+        throw error::ShapeError(lmat.get_shape(), rmat.get_shape(), "multiply");
     }
-    auto out_data = util::matmul(
+    std::vector<dtype> out_data = util::matmul(
         lmat.get_data(), lmat.get_shape(),
         rmat.get_data(), rmat.get_shape()
     );
     auto out_shape = Shape::get_product_shape(lmat.get_shape(), rmat.get_shape());
 
-    return NArray(out_data, out_shape);
+    return NArray(std::move(out_data), out_shape);
 }
 
 template <typename dtype>
 NArray<dtype> dot(const NArray<dtype>& a, const NArray<dtype>& b) {
-    if(a.get_shape().get_Ndim() == 1) {
-        if(!a.same_shape(b))
-            error::ShapeError(a.get_shape(), b.get_shape(), "dot");
-        else {
+    MatmulType type = Shape::get_matmul_type(a.get_shape(), b.get_shape());
+    
+    switch(type) {
+        case MatmulType::Invalid:
+            throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
+            break;
+        case MatmulType::Dot: {
             dtype sum = 0;
             for(size_t i = 0; i < a.get_total_size(); i++)
                 sum += (a.get_data()[i] * b.get_data()[i]);
             return NArray(sum);
+            break;
         }
-    } else if(a.get_shape().get_Ndim() == 2){
-        return matmul(a, b);
-    } else error::ShapeError(a.get_shape(), b.get_shape(), "dot");
+        case MatmulType::MatCol:
+            return matmul(a,b);
+            break;
+        case MatmulType::RowMat:
+            return matmul(a,b);
+            break;
+        case MatmulType::MatMat:
+            return matmul(a,b);
+            break;
+        default:
+        throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
+        break;
+    }
 }
 
 template <typename dtype>
@@ -50,7 +64,7 @@ dtype dot(dtype a, dtype b) { return a * b; }
 template <typename dtype>
 dtype vdot(const NArray<dtype>& a, const NArray<dtype>& b) {
     if(!a.same_shape(b))
-        error::ShapeError(a.get_shape(), b.get_shape(), "dot");
+        throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
 
     dtype sum = 0;
     for(size_t i = 0; i < a.get_total_size(); i++)

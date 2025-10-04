@@ -2,7 +2,9 @@
 #pragma once
 
 #include <vector>
+
 #include "../Core/Shape.hpp"
+
 
 namespace numcpp::util {
 
@@ -14,9 +16,24 @@ std::vector<dtype> matmul(
     auto out_shape = Shape::get_product_shape(lshape, rshape);
     std::vector<dtype> out(out_shape.get_total_size(), static_cast<dtype>(0));
     
-    int m = lshape[0];
-    int k = lshape[1];
-    int n = rshape[1];
+    int m,k,n;
+
+    switch(Shape::get_matmul_type(lshape, rshape)) {
+        case MatmulType::Dot:
+            m = 1; k = lshape[0]; n = 1;
+            break;
+        case MatmulType::RowMat:
+            m = 1; k = lshape[0]; n = rshape[1];
+            break;
+        case MatmulType::MatCol:
+            m = lshape[0]; k = lshape[1]; n = 1;
+            break;
+        case MatmulType::MatMat:
+            m = lshape[0]; k = lshape[1]; n = rshape[1];
+            break;
+        default:
+            throw std::runtime_error("Unhandled MatmulType");
+    }
 
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {

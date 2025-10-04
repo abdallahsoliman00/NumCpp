@@ -5,7 +5,18 @@
 #include <vector>
 #include <algorithm>
 
+#include "../Utils/Errors.hpp"
+
 namespace numcpp {
+
+enum class MatmulType {
+    Invalid = 0,
+    Dot,
+    RowMat,
+    MatCol,
+    MatMat
+}; // enum class MatmulType
+
 
 struct Shape {
     std::vector<size_t> dimensions;
@@ -57,17 +68,28 @@ struct Shape {
         return !same_shape(other);
     }
 
-    // Checks if two shapes can be multiplied
-    bool are_matrix_multipliable(const Shape& other) const {
-        if(this->get_Ndim() > 2 || other.get_Ndim() > 2)
-            return false;
-        else
-            return (this->dimensions[get_index(-1)] == other.dimensions[other.get_index(-2)]);
-    }
-
     // Returns the shape of the product
     static Shape get_product_shape(const Shape& lshape, const Shape& rshape) {
-        return Shape({lshape[0], rshape[-1]});
+        MatmulType type = get_matmul_type(lshape, rshape);
+        switch (type) {
+        case MatmulType::Invalid:
+            throw error::ShapeError("Invlalid shapes for matrix multiplication.");
+            break;
+        case MatmulType::Dot:
+            return Shape(1);
+            break;
+        case MatmulType::RowMat:
+            return Shape(rshape[1]);
+            break;
+        case MatmulType::MatCol:
+            return Shape(lshape[0]);
+            break;
+        case MatmulType::MatMat:
+            return Shape({lshape[0], rshape[1]});
+        default:
+            throw error::ShapeError("Invlalid shapes for matrix multiplication.");
+            break;
+        }
     }
 
     // Returns the total size required to store the array
@@ -107,6 +129,32 @@ struct Shape {
         return os;
     }
 
+    static MatmulType get_matmul_type(const Shape& a, const Shape& b) {
+        const int ndim1 = a.get_Ndim();
+        const int ndim2 = b.get_Ndim();
+
+        if (ndim1 > 2 || ndim2 > 2)
+            return MatmulType::Invalid;
+
+        if (ndim1 == 1 && ndim2 == 1)
+            return (a.dimensions[0] == b.dimensions[0])
+                ? MatmulType::Dot : MatmulType::Invalid;
+
+        if (ndim1 == 1 && ndim2 == 2)
+            return (a.dimensions[0] == b.dimensions[0])
+                ? MatmulType::RowMat : MatmulType::Invalid;
+
+        if (ndim1 == 2 && ndim2 == 1)
+            return (a.dimensions[1] == b.dimensions[0])
+                ? MatmulType::MatCol : MatmulType::Invalid;
+
+        if (ndim1 == 2 && ndim2 == 2)
+            return (a.dimensions[1] == b.dimensions[0])
+                ? MatmulType::MatMat : MatmulType::Invalid;
+
+        return MatmulType::Invalid;
+    }
+
 private:
     size_t get_index(int index) const {
         int size = static_cast<int>(dimensions.size());
@@ -118,6 +166,7 @@ private:
         else
             throw std::runtime_error("Shape index out of range.\n");
     }
-};
+};  // struct Shape
+
 
 } // namespace numcpp

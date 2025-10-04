@@ -6,7 +6,11 @@
 #include "StringOps.hpp"
 #include "../Core/Shape.hpp"
 
-namespace numcpp::error {
+namespace numcpp {
+
+struct Shape;
+
+namespace error {
 
 class ShapeError : public std::runtime_error {
 public:
@@ -14,6 +18,11 @@ public:
         : std::runtime_error("[ShapeError]: Unable to " + operation + " Vectors. Cannot "
                             + operation +" shapes " + util::toString(lshape) + " and "
                             + util::toString(rshape) + ".")
+    {
+        std::cerr << what() << std::endl;
+    }
+    ShapeError(std::string&& message)
+        : std::runtime_error("[ShapeError]: " + std::move(message))
     {
         std::cerr << what() << std::endl;
     }
@@ -41,4 +50,5 @@ public:
     }
 };
 
-} // namespace numcpp::error
+} // namespace error
+} // namespace numcpp

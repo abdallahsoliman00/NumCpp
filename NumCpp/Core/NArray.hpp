@@ -41,7 +41,7 @@ protected:
             depth++;
             get_size_requirements(size, depth, next, rest...);
         } else {
-            error::ValueError("Could not initialise array because subarrays do not have the same shape.");
+            throw error::ValueError("Could not initialise array because subarrays do not have the same shape.");
         }
     }
 
@@ -519,21 +519,21 @@ public:
         if (_shape.get_total_size() == 1)
             return static_cast<int>(get_data()[0]);
         else
-            error::ConversionError(_shape, "int");
+            throw error::ConversionError(_shape, "int");
     }
 
     explicit operator long long() const {
         if (_shape.get_total_size() == 1)
             return static_cast<long long>(get_data()[0]);
         else
-            error::ConversionError(_shape, "long long");
+            throw error::ConversionError(_shape, "long long");
     }
 
     explicit operator double() const {
         if (_shape.get_total_size() == 1)
             return static_cast<double>(get_data()[0]);
         else
-            error::ConversionError(_shape, "double");
+            throw error::ConversionError(_shape, "double");
     }
 
     explicit operator bool() const {
@@ -578,6 +578,7 @@ public:
         util::transpose(out_data_ptr.get(), _data_ptr.get(), _shape);
         return NArray(out_data_ptr, out_shape);
     }
+    NArray T() const { return transpose(); }
 
     // Returns a new flat vector
     NArray flatten() const { return NArray(get_data_copy_as_shared_ptr(), _shape.flatten()); }
