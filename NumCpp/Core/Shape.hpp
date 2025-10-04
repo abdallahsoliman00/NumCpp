@@ -86,6 +86,7 @@ struct Shape {
             break;
         case MatmulType::MatMat:
             return Shape({lshape[0], rshape[1]});
+            break;
         default:
             throw error::ShapeError("Invlalid shapes for matrix multiplication.");
             break;

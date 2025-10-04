@@ -6,6 +6,7 @@ using nc::Shape;
 
 
 void initialisation_example() {
+    /* For more, see NumCpp/Core/array_creation.hpp */
     // Array initialisation
     auto array1 = nc::NArray({1,2,3});
     auto array2 = nc::linspace(0,1,20, false);
