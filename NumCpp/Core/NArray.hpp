@@ -113,13 +113,15 @@ protected:
     }
 
     // Print a 1D array
-    static void OneDPrint(std::ostream& os, const NArray& arr) {
+    static void OneDPrint(
+        std::ostream& os, const NArray& arr, const util::PrintAttributes& attributes
+    ) {
         os << '[';
         for(size_t i = 0; i < arr._shape[0]; i++) {
         if constexpr (std::is_same_v<dtype, bool>) {
             os << (arr.get_data()[i] ? " true" : " false");
         } else {
-            os << arr.get_data()[i];
+            os << util::num_to_str_from_attributes(arr.get_data()[i], attributes);
         }
             if(i != arr._shape[0] - 1) os << " ";
         }
@@ -127,10 +129,13 @@ protected:
     }
 
     // Recursively prints the N-Dimensional arrays (> 2D arrays)
-    static void recursivePrint(std::ostream& os, std::vector<dtype> data, const Shape& shape, int depth = 0) {
+    static void recursivePrint(
+        std::ostream& os, std::vector<dtype> data, const Shape& shape,
+        const util::PrintAttributes& attributes, int depth = 0
+    ) {
         // Base case
         if(shape.get_Ndim() == 1) {
-            OneDPrint(os, NArray(data));
+            OneDPrint(os, NArray(data), attributes);
             return;
         }
 
@@ -149,7 +154,7 @@ protected:
                 else
                     os << "\n" << std::string(depth + 1, ' ');
             }
-            recursivePrint(os, groups[i], subshape, depth + 1);
+            recursivePrint(os, groups[i], subshape, attributes, depth + 1);
         }
         os << ']';
     }
@@ -490,17 +495,22 @@ public:
     // [20 , 1  , 100]
     /* Print Overload */
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
+        // Fetch print attributes
+        util::PrintAttributes attributes;
+        if(std::is_arithmetic_v<dtype>)
+            attributes = util::GetPrintAttributes(arr.get_data(), arr.get_total_size());
+
         switch(arr._shape.get_Ndim()) {
         case 1: // 1D vector
             if(arr._shape[0] == 1) os << *(arr.get_data());
-            else OneDPrint(os, arr);
+            else OneDPrint(os, arr, attributes);
             break;
 
         case 2: { // Martix
             os << '[';
             auto grps = util::split(arr.get_data_as_vector(), arr._shape[0]);
             for(size_t i = 0; i < grps.size(); i++) {
-                OneDPrint(os, NArray(grps[i]));
+                OneDPrint(os, NArray(grps[i]), attributes);
                 if(i != grps.size() - 1) os << "\n ";
             }
             os << ']';
@@ -508,7 +518,7 @@ public:
         }
 
         default: // Anything else
-            recursivePrint(os, arr.get_data_as_vector(), arr._shape);
+            recursivePrint(os, arr.get_data_as_vector(), arr._shape, attributes);
             break;
         }
         return os;

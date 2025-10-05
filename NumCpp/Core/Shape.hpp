@@ -68,7 +68,7 @@ struct Shape {
         return !same_shape(other);
     }
 
-    // Returns the shape of the product
+    // Returns the shape of the product of two matrices
     static Shape get_product_shape(const Shape& lshape, const Shape& rshape) {
         MatmulType type = get_matmul_type(lshape, rshape);
         switch (type) {

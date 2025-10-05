@@ -5,6 +5,8 @@
 
 A C++ header-only library inspired by NumPy.
 
+(Compatible with C++17 and above)
+
 ## Overview
 **NumCpp** is an implementation of NumPy in C++. It hopes to bring about the easy number and array manipulation found in NumPy ... but in C++.
 
