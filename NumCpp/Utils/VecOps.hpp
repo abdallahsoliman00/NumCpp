@@ -8,6 +8,7 @@
 
 namespace numcpp::util {
 
+// Returns a vector containing the flattened matrix product
 template <typename dtype>
 std::vector<dtype> matmul(
     const dtype* larr, const Shape& lshape,
@@ -48,6 +49,7 @@ std::vector<dtype> matmul(
     return out;
 }
 
+
 // Takes in an array, transposes it in place
 template <typename dtype>
 void transpose(dtype* arr, const Shape& shape) {
@@ -63,7 +65,7 @@ void transpose(dtype* arr, const Shape& shape) {
     }
 }
 
-// Takes in an array to modify, the data, and transposes the array using the data 
+// Takes in the array where the transpose result will be stored, the data, and transposes the array using the data 
 template <typename dtype>
 void transpose(dtype* arr, dtype* data_in, const Shape& shape) {
     int rows = shape[0];
@@ -77,6 +79,8 @@ void transpose(dtype* arr, dtype* data_in, const Shape& shape) {
 }
 
 
+// Splits a vector vin into n_groups
+// Warning: DO NOT use if vector.size() % n_groups != 0
 template <typename T>
 std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
     size_t grp_size = vin.size()/n_groups;

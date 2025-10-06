@@ -9,6 +9,7 @@
 
 namespace numcpp {
 
+/* An enum class to help label the different types of vector and matrix multiplications */
 enum class MatmulType {
     Invalid = 0,
     Dot,
@@ -18,55 +19,94 @@ enum class MatmulType {
 }; // enum class MatmulType
 
 
+/* A helper class to hold the shape of the NArray */
 struct Shape {
+
     std::vector<size_t> dimensions;
+
+    /* ====== Constructors ====== */
 
     // Default constructor
     Shape() : dimensions({}) {}
+
     // Scalar constructor
     Shape(unsigned int num) : dimensions({num}) {}
+
     // Initializer constructor
     Shape(std::initializer_list<size_t> dims) :  dimensions(dims) {}
+
     // Copy constructor
     Shape(const Shape& newShape) : dimensions(newShape.dimensions) {}
+
     // Move constructor
     Shape(Shape&& other) noexcept : dimensions(std::move(other.dimensions)) {}
+
     // Iterator constructor
     template <typename Iter>
     Shape(Iter first, Iter last) : dimensions(first, last) {}
+
     // Vector constructor
     Shape(const std::vector<size_t>& dims) : dimensions(dims) {}
+
     // Move constructor
     Shape(std::vector<size_t>&& dims) noexcept : dimensions(std::move(dims)) {}
 
-    // Changes the shape
-    void reshape(const std::initializer_list<size_t>& dims) { dimensions = std::move(dims); }
+
+
+    /* ====== Helper Functions ====== */
 
     // Inserts a dimension at a specified position
     void insert_dimension(size_t dimension, int position) {
         dimensions.insert(dimensions.begin() + get_index(position), dimension);
     }
 
-    // Returns a new flat shape
-    Shape flatten() const { return Shape({get_total_size()}); }
-
+    
     // Returns the total number of dimensions is a shape
     size_t get_Ndim() const { return dimensions.size(); }
 
+    
     // Checks if two shapes are identical
     bool same_shape(const Shape& other) const {
         return this->dimensions == other.dimensions;
     }
 
-    // Equality operator
-    bool operator==(const Shape& other) const {
-        return same_shape(other);
+
+    // Returns the total size required to store the array
+    size_t get_total_size() const {
+        size_t result = 1;
+        for(const auto& d : dimensions) result *= d;
+        return result;
     }
 
-    // Inequality operator
-    bool operator!=(const Shape& other) const {
-        return !same_shape(other);
+
+    /* ====== Main Functions ====== */
+
+    // Changes the shape
+    void reshape(const std::initializer_list<size_t>& dims) { dimensions = std::move(dims); }
+
+
+    // Returns a new flat shape
+    Shape flatten() const { return Shape({get_total_size()}); }
+
+
+    // Transpose a vector or matrix;
+    Shape transpose() const {
+        switch(get_Ndim()) {
+            case 1:
+                return Shape({1,dimensions[0]});
+                break;
+            case 2:
+                return Shape({dimensions[1],dimensions[0]});
+                break;
+            default:
+                throw std::runtime_error("Cannot transpose arrays with more than 2 dimensions.");
+                break;
+        }
     }
+
+
+
+    /* ====== Static Functions ====== */
 
     // Returns the shape of the product of two matrices
     static Shape get_product_shape(const Shape& lshape, const Shape& rshape) {
@@ -93,43 +133,8 @@ struct Shape {
         }
     }
 
-    // Returns the total size required to store the array
-    size_t get_total_size() const {
-        size_t result = 1;
-        for(const auto& d : dimensions) result *= d;
-        return result;
-    }
 
-    // Transpose a vector or matrix;
-    Shape transpose() const {
-        switch(get_Ndim()) {
-            case 1:
-                return Shape({1,dimensions[0]});
-                break;
-            case 2:
-                return Shape({dimensions[1],dimensions[0]});
-                break;
-            default:
-                throw std::runtime_error("Cannot transpose arrays with more than 2 dimensions.");
-                break;
-        }
-    }
-
-    // Index operator
-    const size_t& operator[](int index) const {
-        return dimensions[get_index(index)];
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const Shape& shape) {
-        os << '(';
-        for(size_t i = 0; i < shape.dimensions.size(); i++) {
-            os << shape.dimensions[i];
-            if((i != shape.dimensions.size() - 1) || (0 == i)) os << ',';
-        }
-        os << ')';
-        return os;
-    }
-
+    // Returns an enum that holds the type of matrix multiplication taking place
     static MatmulType get_matmul_type(const Shape& a, const Shape& b) {
         const int ndim1 = a.get_Ndim();
         const int ndim2 = b.get_Ndim();
@@ -156,7 +161,39 @@ struct Shape {
         return MatmulType::Invalid;
     }
 
+
+
+    /* ====== Operator Overloads ====== */
+
+    // Equality operator
+    bool operator==(const Shape& other) const {
+        return same_shape(other);
+    }
+
+    // Inequality operator
+    bool operator!=(const Shape& other) const {
+        return !same_shape(other);
+    }
+
+    // Index operator
+    const size_t& operator[](int index) const {
+        return dimensions[get_index(index)];
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Shape& shape) {
+        os << '(';
+        for(size_t i = 0; i < shape.dimensions.size(); i++) {
+            os << shape.dimensions[i];
+            if((i != shape.dimensions.size() - 1) || (0 == i)) os << ',';
+        }
+        os << ')';
+        return os;
+    }
+
+
 private:
+
+    // Enables Python-like indexing with negative indexes wrapping around
     size_t get_index(int index) const {
         int size = static_cast<int>(dimensions.size());
 

@@ -19,17 +19,60 @@ namespace numcpp {
 template <typename dtype = double>
 class NArray {
 protected:
-
+    /* ====== Member Variables ====== */
 
     std::shared_ptr<dtype> _data_ptr;
     Shape _shape;
 
 
+public:
+    /* ====== Helper functions ====== */
+
+    // Fetches the NArray shape
+    const Shape& get_shape() const { return this->_shape; }
+
+
+    // Returns a pointer `dtype*` to the data
+    dtype* get_data() const { return this->_data_ptr.get(); }
+
+
+    // Returns the data as an std::vector
+    std::vector<dtype> get_data_as_vector() const {
+        return std::vector<dtype>(_data_ptr.get(), _data_ptr.get() + _shape.get_total_size());
+    }
+
+
+    // Returns a shared pointer to newly allocated heap memory with the data
+    std::shared_ptr<dtype> get_data_copy_as_shared_ptr() const {
+        std::shared_ptr<dtype> out(new dtype[_shape.get_total_size()], std::default_delete<dtype[]>());
+        std::copy(_data_ptr.get(), _data_ptr.get() + _shape.get_total_size(), out.get());
+        return out;
+    }
+
+
+    // Checks if two shapes are the same
+    bool same_shape(const NArray& other) const {
+        return _shape.same_shape(other._shape);
+    }
+
+
+    size_t get_total_size() const {
+        return _shape.get_total_size();
+    }
+
+
+
+protected:
+    /* ====== Helper Functions ====== */
+
     // Gets the total size required to store multiple NArrays
-    void get_size_requirements(size_t& size, int& depth, const NArray& arr) {
+    void get_size_requirements(
+        size_t& size, int& depth, const NArray& arr
+    ) {
         size += arr.get_total_size();
         depth++;
     }
+
     template <typename... Arrays>
     void get_size_requirements(
         size_t& size, int& depth, 
@@ -45,6 +88,7 @@ protected:
         }
     }
 
+
     // Adds the data to the array given the pointer
     void add_data_to_data_ptr(
         const std::shared_ptr<dtype>& data_ptr, size_t starting_pos,
@@ -56,6 +100,7 @@ protected:
             data_ptr.get() + starting_pos
         );
     }
+
     template <typename... Arrays>
     void add_data_to_data_ptr(
         const std::shared_ptr<dtype>& data_ptr, size_t starting_pos,
@@ -70,15 +115,32 @@ protected:
         // Pass the rest recursively
         add_data_to_data_ptr(data_ptr, starting_pos + first.get_total_size(), rest...);
     }
-    
+
+
+    // Enables Python-like indexing with negative indexes wrapping around
+    size_t get_index(const int& index) const {
+        int size = static_cast<int>(_shape[0]);
+
+        if((index >= 0) && (index < size))
+            return static_cast<size_t>(index);
+        else if((index < 0) && (index >= -size))
+            return static_cast<size_t>(index + size);
+        else
+            throw std::runtime_error("Index out of range.");
+    }
+
+
     // Elementwise operation of two NArrays
-    NArray elementWiseOp(const NArray &other, std::function<dtype(dtype, dtype)> func) const {
+    NArray elementWiseOp(
+        const NArray &other, std::function<dtype(dtype, dtype)> func
+    ) const {
         NArray<dtype> out(this->_shape);
         for(size_t i = 0; i < _shape.get_total_size(); i++) {
             out.get_data()[i] = func(this->get_data()[i], other.get_data()[i]);
         }
         return out;
     }
+
 
     // Right scalar operation to NArrays
     NArray fullVecOpR(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
@@ -89,6 +151,7 @@ protected:
         return NArray(std::move(newVec), _shape);
     }
 
+
     // Left scalar operation to NArrays
     NArray fullVecOpL(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
         std::vector<dtype> newVec(_shape.get_total_size());
@@ -97,6 +160,7 @@ protected:
         }
         return NArray(std::move(newVec), _shape);
     }
+
 
     // Returns a mask of which NArray elements are the same
     NArray<bool> elementwiseCompare(const NArray& other, std::function<bool(dtype,dtype)> comparison_func) const {
@@ -111,6 +175,7 @@ protected:
             return NArray<bool>(newVec, _shape);
         }
     }
+
 
     // Print a 1D array
     static void OneDPrint(
@@ -127,6 +192,7 @@ protected:
         }
         os << ']';
     }
+
 
     // Recursively prints the N-Dimensional arrays (> 2D arrays)
     static void recursivePrint(
@@ -159,20 +225,11 @@ protected:
         os << ']';
     }
 
-    size_t get_index(const int& index) const {
-        int size = static_cast<int>(_shape[0]);
-
-        if((index >= 0) && (index < size))
-            return static_cast<size_t>(index);
-        else if((index < 0) && (index >= -size))
-            return static_cast<size_t>(index + size);
-        else
-            throw std::runtime_error("Index out of range.");
-    }
 
 
 public:
     /* ====== 1D constructors ====== */
+
     // Default constructor
     NArray() : _data_ptr(nullptr), _shape() {}
 
@@ -206,6 +263,7 @@ public:
         for(size_t i = 0; i < data.size(); i++)
             _data_ptr.get()[i] = data[i];
     }
+
     NArray(std::vector<dtype>&& data) :
         _data_ptr(new dtype[data.size()], std::default_delete<dtype[]>()),
         _shape({data.size()})
@@ -274,7 +332,8 @@ public:
     }
 
 
-    /* N-Dimensional contructors */
+    /* ====== N-Dimensional contructors ====== */
+
     // Recursive constructor
     NArray(std::initializer_list<NArray> arr) {
         // Check if empty
@@ -355,6 +414,7 @@ public:
     NArray(std::shared_ptr<dtype> sp, const Shape& shape) : _data_ptr(sp), _shape(shape) {}
     NArray(std::shared_ptr<dtype>&& sp, const Shape& shape) : _data_ptr(std::move(sp)), _shape(shape) {}
 
+
     // Constructor from other NArrays
     template <typename... Arrays>
     NArray(const NArray& first, const NArray& next, const Arrays&... rest) : _shape(first._shape) {
@@ -374,6 +434,7 @@ public:
 
 
     /* ====== Operator Overloading ====== */
+
     // Array addition
     NArray operator+(const NArray& other) const {
         if(!same_shape(other))
@@ -381,6 +442,8 @@ public:
         else
             return elementWiseOp(other, &util::add<dtype>);
     }
+
+
     // Array subtraction
     NArray operator-(const NArray& other) const {
         if(!same_shape(other))
@@ -388,6 +451,8 @@ public:
         else
             return elementWiseOp(other, &util::subtract<dtype>);
     }
+
+
     // Array multiplication
     virtual NArray operator*(const NArray& other) const {
         if(!same_shape(other))
@@ -395,6 +460,8 @@ public:
         else
             return elementWiseOp(other, &util::multiply<dtype>);
     }
+
+
     // Array division
     NArray operator/(const NArray& other) const {
         if(!same_shape(other))
@@ -403,49 +470,65 @@ public:
             return elementWiseOp(other, &util::divide<dtype>);
     }
 
+
     /* Scalar Overloads */
+
     // Exponent overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator^(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::pow<dtype>);
     }
 
+
     // Right addition overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator+(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::add<dtype>);
     }
+
+
     // Right subtraction overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator-(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::subtract<dtype>);
     }
+
+
     // Right multiplication overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator*(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::multiply<dtype>);
     }
+
+
     // Right division overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator/(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::divide<dtype>);
     }
 
+
     // Left addition overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator+(T num, const NArray& arr) {
         return arr.fullVecOpL(static_cast<dtype>(num), &util::add<dtype>);
     }
+
+
     // Left subtraction overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator-(T num, const NArray& arr) {
         return arr.fullVecOpL(static_cast<dtype>(num), &util::subtract<dtype>);
     }
+
+
     // Left multiplication overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator*(T num, const NArray& arr) {
         return arr.fullVecOpL(static_cast<dtype>(num), &util::multiply<dtype>);
     }
+
+
     // Left division overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator/(T num, const NArray& arr) {
@@ -454,21 +537,27 @@ public:
 
 
     /* Comparison Overloads */
+
     NArray<bool> operator==(const NArray& other) const {
         return elementwiseCompare(other, &util::eq<dtype>);
     }
+
     NArray<bool> operator!=(const NArray& other) const {
         return elementwiseCompare(other, &util::neq<dtype>);
     }
+
     NArray<bool> operator<=(const NArray& other) const {
         return elementwiseCompare(other, &util::leq<dtype>);
     }
+
     NArray<bool> operator>=(const NArray& other) const {
         return elementwiseCompare(other, &util::geq<dtype>);
     }
+
     NArray<bool> operator<(const NArray& other) const {
         return elementwiseCompare(other, &util::less_than<dtype>);
     }
+
     NArray<bool> operator>(const NArray& other) const {
         return elementwiseCompare(other, &util::greater_than<dtype>);
     }
@@ -490,9 +579,6 @@ public:
     }
 
 
-    // TODO: Print all numbers to have the same length i.e:
-    // [1  , 10 , 100]
-    // [20 , 1  , 100]
     /* Print Overload */
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
         // Fetch print attributes
@@ -524,7 +610,10 @@ public:
         return os;
     }
 
+
+
     /* ====== Conversion Operators ====== */
+
     explicit operator int() const {
         if (_shape.get_total_size() == 1)
             return static_cast<int>(get_data()[0]);
@@ -551,36 +640,9 @@ public:
     }
 
 
-    /* Helper functions */
-    // Fetches the NArray shape
-    const Shape& get_shape() const { return this->_shape; }
 
-    // Returns a pointer to the data
-    dtype* get_data() const { return this->_data_ptr.get(); }
+    /* ===== NArray functions ====== */
 
-    // Returns the data as an std::vector
-    std::vector<dtype> get_data_as_vector() const {
-        return std::vector<dtype>(_data_ptr.get(), _data_ptr.get() + _shape.get_total_size());
-    }
-
-    // Returns a shared pointer to newly allocated heap memory with the data
-    std::shared_ptr<dtype> get_data_copy_as_shared_ptr() const {
-        std::shared_ptr<dtype> out(new dtype[_shape.get_total_size()], std::default_delete<dtype[]>());
-        std::copy(_data_ptr.get(), _data_ptr.get() + _shape.get_total_size(), out.get());
-        return out;
-    }
-
-    // Checks if two shapes are the same
-    bool same_shape(const NArray& other) const {
-        return _shape.same_shape(other._shape);
-    }
-
-    size_t get_total_size() const {
-        return _shape.get_total_size();
-    }
-
-
-    /* NArray functions */
     // Returns a NEW transposed matrix
     NArray transpose() const {
         auto out_shape = _shape.transpose();
@@ -588,20 +650,27 @@ public:
         util::transpose(out_data_ptr.get(), _data_ptr.get(), _shape);
         return NArray(out_data_ptr, out_shape);
     }
+
+    // Returns a NEW transposed matrix (wrapper for NArray::transpose())
     NArray T() const { return transpose(); }
+
 
     // Returns a new flat vector
     NArray flatten() const { return NArray(get_data_copy_as_shared_ptr(), _shape.flatten()); }
 
+
     // Returns a flat view of the array
     NArray ravel() { return NArray(_data_ptr, _shape.flatten()); }
+
 
     // Returns a copy of the array
     NArray copy() { return NArray(*this); }
 
 };
 
-/* Deduction guides */
+
+/* ====== Deduction guides ======= */
+
 // Scalar constructor
 template < typename T>
 NArray(T) -> NArray<T>;

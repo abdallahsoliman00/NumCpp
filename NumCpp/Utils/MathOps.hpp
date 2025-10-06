@@ -30,6 +30,7 @@ template <typename T> T pow(T a, T b) {
     return std::pow(a,b);
 }
 
+
 /* ====== Comparisons ====== */
 template <typename T> T eq(T a, T b) {
     return a == b;

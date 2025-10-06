@@ -7,37 +7,45 @@
 // TODO: Check for types. Cannot create a zeros array of char
 namespace numcpp {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
+
     template <typename T = double>
     NArray<T> zeros(const size_t& size) {
         return NArray<T>(size, static_cast<T>(0));
     }
+
     template <typename T = double>
     NArray<T> zeros(const Shape& shape) {
         return NArray<T>(shape, static_cast<T>(0));
     }
 
+
     template <typename T = double>
     NArray<T> zeros_like(const NArray<T>& other) {
         return NArray<T>(other.get_shape(), static_cast<T>(0));
     }
+
     template <typename T = double>
     NArray<T> zeros_like(const std::vector<T>& other) {
         return NArray<T>(other.size(), static_cast<T>(0));
     }
 
+
     template <typename T = double>
     NArray<T> ones(const size_t& size) {
         return NArray<T>(size, static_cast<T>(1));
     }
+
     template <typename T = double>
     NArray<T> ones(const Shape& shape) {
         return NArray<T>(shape, static_cast<T>(1));
     }
 
+
     template <typename T = double>
     NArray<T> ones_like(const NArray<T>& other) {
         return NArray<T>(other.get_shape(), static_cast<T>(1));
     }
+
 
     NArray<double> linspace(const float& start, const float& stop, const size_t& count, const bool& endpoint = true) {
         float step = (stop - start)/(count - static_cast<float>(endpoint));
@@ -49,6 +57,7 @@ namespace numcpp {
         return NArray(out);
     }
 
+
     NArray<double> arange(const float& start, const float& stop, const float& step = 1) {
         size_t count = static_cast<size_t>(1 + (stop - start)/step);
         std::vector<double> out(count);
@@ -58,6 +67,7 @@ namespace numcpp {
         }
         return NArray(std::move(out));
     }
+
 
     template <typename T = double>
     NArray<T> eye(size_t n, size_t m = 0) {
@@ -72,8 +82,10 @@ namespace numcpp {
         return NArray<T>(std::move(out_data), Shape({n, m}));
     }
 
+
     template <typename T = double>
     NArray<T> identity(size_t n) {
         return eye<T>(n);
     }
+
 } // namespace numcpp

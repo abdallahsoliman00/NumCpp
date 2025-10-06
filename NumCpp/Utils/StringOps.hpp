@@ -145,6 +145,7 @@ std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes)
     std::string result = "";
     if(attributes.negative && (num >= 0)) result += " ";
 
+    // `is_scientific` oerrides all other print attributes
     if(attributes.is_scientific)
         result += num_to_scientific(num, get_left_padding(attributes.largest_exponent));
     else {

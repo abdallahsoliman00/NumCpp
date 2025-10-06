@@ -9,6 +9,7 @@
 
 namespace numcpp {
 
+// Matrix-multiplication of two matrices
 template <typename dtype>
 NArray<dtype> matmul(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
     if(!static_cast<bool>(Shape::get_matmul_type(lmat.get_shape(), rmat.get_shape()))) {
@@ -23,6 +24,8 @@ NArray<dtype> matmul(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
     return NArray(std::move(out_data), out_shape);
 }
 
+
+// Dot product of two vectors
 template <typename dtype>
 NArray<dtype> dot(const NArray<dtype>& a, const NArray<dtype>& b) {
     MatmulType type = Shape::get_matmul_type(a.get_shape(), b.get_shape());
@@ -61,6 +64,8 @@ Matrix<dtype> dot(const Matrix<dtype>& a, const Matrix<dtype>& b) {
 template <typename dtype>
 dtype dot(dtype a, dtype b) { return a * b; }
 
+
+// Flattens the input NArrays and returns the dot-product
 template <typename dtype>
 dtype vdot(const NArray<dtype>& a, const NArray<dtype>& b) {
     if(!a.same_shape(b))
@@ -73,6 +78,8 @@ dtype vdot(const NArray<dtype>& a, const NArray<dtype>& b) {
     return sum;
 }
 
+
+// Used for exponentiation
 template <typename dtype>
 NArray<dtype> pow(const NArray<dtype>& arr, const int& exponent) {
     NArray<dtype> out(arr);
@@ -88,6 +95,8 @@ inline auto pow(T base, U exponent) -> decltype(std::pow(base, exponent)) {
     return std::pow(base, exponent);
 }
 
+
+// Returns the elementwise multiplication of two arrays of any dimanesion
 template <typename dtype>
 NArray<dtype> hadamard(const NArray<dtype>& larr, const NArray<dtype>& rarr) {
     if(larr.get_shape() != rarr.get_shape())
