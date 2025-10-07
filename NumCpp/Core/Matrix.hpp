@@ -57,7 +57,7 @@ public:
 
     /* ====== Helper Functions ====== */
 
-    static bool are_multipliable(const Matrix<dtype>& lmat, const Matrix<dtype>& rmat) const {
+    static bool are_multipliable(const Matrix<dtype>& lmat, const Matrix<dtype>& rmat) {
         return static_cast<bool>(Shape::get_matmul_type(lmat._shape, rmat.get_shape()));
     }
 

@@ -188,7 +188,7 @@ protected:
         } else {
             os << util::num_to_str_from_attributes(arr.get_data()[i], attributes);
         }
-            if(i != arr._shape[0] - 1) os << " ";
+            if(i != arr._shape[0] - 1) os << ' ';
         }
         os << ']';
     }

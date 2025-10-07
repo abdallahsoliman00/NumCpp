@@ -7,7 +7,9 @@
 #include "../Constants.hpp"
 
 
-namespace numcpp::util {
+namespace numcpp {
+
+namespace util {
 /* ====== Operations =======*/
 template <typename T> T add(T a, T b) {
     return a + b;
@@ -22,7 +24,7 @@ template <typename T> T multiply(T a, T b) {
 }
 
 template <typename T> T divide(T a, T b) {
-    if(b == 0) return inf<T>;
+    if(b == 0) return inf_t<T>;
     else return a / b;
 }
 
@@ -56,16 +58,15 @@ template <typename T> T greater_than(T a, T b) {
     return a > b;
 }
 
+} // namespace util
+
 template <typename T>
-int is_inf(T num) {
+bool isinf(T num) {
     if constexpr (std::is_floating_point_v<T>) {
-        if(std::isinf(num)) {
-            return (num > 0) ? 1 : -1;
-        }
-        return 0;
+        return std::isinf(num);
     } else {
         return 0;
     }
 }
 
-} // namespace numcpp::util
+} // namespace numcpp
