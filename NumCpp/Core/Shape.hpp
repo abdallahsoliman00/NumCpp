@@ -165,6 +165,10 @@ struct Shape {
 
     /* ====== Operator Overloads ====== */
 
+    // Assignment operators
+    Shape& operator=(const Shape&) = default; // allow copy assignment
+    Shape& operator=(Shape&&) = default;      // allow move assignment
+
     // Equality operator
     bool operator==(const Shape& other) const {
         return same_shape(other);

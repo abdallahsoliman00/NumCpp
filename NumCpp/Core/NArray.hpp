@@ -188,7 +188,7 @@ protected:
         } else {
             os << util::num_to_str_from_attributes(arr.get_data()[i], attributes);
         }
-            if(i != arr._shape[0] - 1) os << ' ';
+            if(i < arr._shape[0] - 1) os << ' ';
         }
         os << ']';
     }
@@ -260,8 +260,7 @@ public:
         _data_ptr(new dtype[data.size()], std::default_delete<dtype[]>()),
         _shape({static_cast<size_t>(data.size())})
     {
-        for(size_t i = 0; i < data.size(); i++)
-            _data_ptr.get()[i] = data[i];
+        std::copy(data.begin(), data.end(), _data_ptr.get());
     }
 
     NArray(std::vector<dtype>&& data) :
@@ -386,12 +385,26 @@ public:
         _data_ptr(new dtype[vec.size()], std::default_delete<dtype[]>()),
         _shape(shape)
     {
-        for(size_t i = 0; i < vec.size(); i++)
-            _data_ptr.get()[i] = vec[i];
-        
         if (this->_shape.get_total_size() != vec.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
+        
+        std::copy(vec.begin(), vec.end(), _data_ptr.get());
+    }
+
+
+    // Data + shape constructor (from initializer_list)
+    NArray(std::initializer_list<dtype> list, const Shape& shape) :
+        _data_ptr(new dtype[list.size()], std::default_delete<dtype[]>()),
+        _shape(shape)
+    {
+        if (this->_shape.get_total_size() != list.size()) {
+            throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
+        }
+
+        size_t i = 0;
+        for(auto item : list)
+            _data_ptr.get()[i++] = item;
     }
 
 
@@ -399,6 +412,14 @@ public:
     NArray(const Shape& shape, dtype val = 0) :
         _data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
         _shape(shape)
+    {
+        for(size_t i = 0; i < _shape.get_total_size(); i++)
+            _data_ptr.get()[i] = val;
+    }
+
+    NArray(Shape&& shape, dtype val = 0) :
+        _data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
+        _shape(std::move(shape))
     {
         for(size_t i = 0; i < _shape.get_total_size(); i++)
             _data_ptr.get()[i] = val;
@@ -412,7 +433,13 @@ public:
 
     // Shared pointer + shape constructor
     NArray(std::shared_ptr<dtype> sp, const Shape& shape) : _data_ptr(sp), _shape(shape) {}
-    NArray(std::shared_ptr<dtype>&& sp, const Shape& shape) : _data_ptr(std::move(sp)), _shape(shape) {}
+    NArray(std::shared_ptr<dtype>&& sp, Shape&& shape) : _data_ptr(std::move(sp)), _shape(std::move(shape)) {}
+
+
+    // Raw pointer + shape constructor
+    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it.
+    NArray(dtype* ptr, const Shape& shape) : _data_ptr(ptr), _shape(shape) {}
+    NArray(dtype* ptr, Shape&& shape) : _data_ptr(ptr), _shape(std::move(shape)) {}
 
 
     // Constructor from other NArrays

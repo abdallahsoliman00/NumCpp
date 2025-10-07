@@ -168,11 +168,17 @@ std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes)
             pad_left(result, attributes.left_padding - get_left_padding(num));
 
             std::string num_str = toString(num, attributes.right_padding);
-            remove_trailing_zeros(num_str);
+            if(attributes.right_padding) remove_trailing_zeros(num_str);
             result += num_str;
-            num >= 0 ?
-                pad_right(result, attributes.right_padding + get_left_padding(num) + 1 - num_str.size())
-            :   pad_right(result, attributes.right_padding + get_left_padding(num) + 2 - num_str.size());
+            if(attributes.right_padding) {
+                num >= 0 ?
+                    pad_right(result, attributes.right_padding + get_left_padding(num) + 1 - num_str.size())
+                :   pad_right(result, attributes.right_padding + get_left_padding(num) + 2 - num_str.size());
+            } else {
+                num >= 0 ?
+                    pad_right(result, attributes.right_padding + get_left_padding(num) - num_str.size())
+                :   pad_right(result, attributes.right_padding + get_left_padding(num) + 1 - num_str.size());
+            }
         }
     }
     return result;

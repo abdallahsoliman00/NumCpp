@@ -51,6 +51,8 @@ std::vector<dtype> matmul(
 // Takes in an array, transposes it in place
 template <typename dtype>
 void transpose(dtype* arr, const Shape& shape) {
+    if(shape.get_Ndim() == 1) return;
+    
     std::vector<dtype> temp(arr, arr + shape.get_total_size());
     
     int rows = shape[0];
@@ -66,6 +68,13 @@ void transpose(dtype* arr, const Shape& shape) {
 // Takes in the array where the transpose result will be stored, the data, and transposes the array using the data 
 template <typename dtype>
 void transpose(dtype* arr, dtype* data_in, const Shape& shape) {
+    if (shape.get_Ndim() == 1) {
+        int n = shape[0];
+        for (int i = 0; i < n; i++)
+            arr[i] = data_in[i];
+        return;
+    }
+
     int rows = shape[0];
     int cols = shape[1];
 
