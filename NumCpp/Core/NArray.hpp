@@ -51,8 +51,8 @@ public:
 
 
     // Checks if two shapes are the same
-    bool same_shape(const NArray& other) const {
-        return _shape.same_shape(other._shape);
+    static bool same_shape(const NArray& a, const NArray& b) {
+        return a._shape.same_shape(b._shape);
     }
 
 
@@ -65,8 +65,12 @@ public:
 protected:
     /* ====== Helper Functions ====== */
 
+    dtype* begin() { return _data_ptr.get(); }
+
+    dtype* end() { return _data_ptr.get() + _shape.get_total_size(); }
+
     // Gets the total size required to store multiple NArrays
-    void get_size_requirements(
+    static void get_size_requirements(
         size_t& size, int& depth, const NArray& arr
     ) {
         size += arr.get_total_size();
@@ -74,12 +78,12 @@ protected:
     }
 
     template <typename... Arrays>
-    void get_size_requirements(
+    static void get_size_requirements(
         size_t& size, int& depth, 
         const NArray& arr, const NArray& next, 
         const Arrays&... rest
     ) {
-        if(arr.same_shape(next)) {
+        if(same_shape(arr, next)) {
             size += arr.get_total_size();
             depth++;
             get_size_requirements(size, depth, next, rest...);
@@ -89,8 +93,8 @@ protected:
     }
 
 
-    // Adds the data to the array given the pointer
-    void add_data_to_data_ptr(
+    // Adds the data to the array given its pointer
+    static void add_data_to_data_ptr(
         const std::shared_ptr<dtype>& data_ptr, size_t starting_pos,
         const NArray& arr
     ) {
@@ -102,7 +106,7 @@ protected:
     }
 
     template <typename... Arrays>
-    void add_data_to_data_ptr(
+    static void add_data_to_data_ptr(
         const std::shared_ptr<dtype>& data_ptr, size_t starting_pos,
         const NArray& first, const Arrays&... rest
     ) {
@@ -164,7 +168,7 @@ protected:
 
     // Returns a mask of which NArray elements are the same
     NArray<bool> elementwiseCompare(const NArray& other, std::function<bool(dtype,dtype)> comparison_func) const {
-        if(!same_shape(other)) {
+        if(!same_shape(*this, other)) {
             throw error::ShapeError(this->_shape, other._shape, "compare");
         }
         else {
@@ -467,7 +471,7 @@ public:
 
     // Array addition
     NArray operator+(const NArray& other) const {
-        if(!same_shape(other))
+        if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "add");
         else
             return elementWiseOp(other, &util::add<dtype>);
@@ -476,7 +480,7 @@ public:
 
     // Array subtraction
     NArray operator-(const NArray& other) const {
-        if(!same_shape(other))
+        if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "subtract");
         else
             return elementWiseOp(other, &util::subtract<dtype>);
@@ -485,7 +489,7 @@ public:
 
     // Array multiplication
     virtual NArray operator*(const NArray& other) const {
-        if(!same_shape(other))
+        if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "multiply");
         else
             return elementWiseOp(other, &util::multiply<dtype>);
@@ -494,7 +498,7 @@ public:
 
     // Array division
     NArray operator/(const NArray& other) const {
-        if(!same_shape(other))
+        if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "divide");
         else
             return elementWiseOp(other, &util::divide<dtype>);
@@ -592,9 +596,8 @@ public:
         return elementwiseCompare(other, &util::greater_than<dtype>);
     }
 
-    // TODO: Add slicing that allows editing the elements
-    // this can be done by overloading the = operator such that if
-    // both left and right elements are the same shape, they can be changed
+
+
     /* Index Overload */
     NArray<dtype> operator[](const int& i) const {
         auto index = get_index(i);
@@ -605,6 +608,72 @@ public:
             auto slice_start = _data_ptr.get() + _shape[1] * index;
             auto new_shape = Shape(_shape.dimensions.begin() + 1, _shape.dimensions.end());
             return NArray<dtype>(_data_ptr, slice_start, std::move(new_shape));
+        }
+    }
+
+
+    /* Assignment Overload */
+    void operator=(const NArray& other) {
+        if(same_shape(*this, other)) {
+            std::copy(
+                other.get_data(),
+                other.get_data() + _shape.get_total_size(),
+                this->get_data()
+            );
+        } else {
+            throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
+        }
+    }
+        
+    void operator=(NArray&& other) {
+        if(same_shape(*this, other)) {
+            std::move(
+                other.get_data(),
+                other.get_data() + _shape.get_total_size(),
+                this->get_data()
+            );
+        } else {
+            throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
+        }
+    }
+
+    void operator=(std::initializer_list<dtype> list) {
+        if(this->_shape.get_Ndim() == 1 && this->_shape[0] == list.size()) {
+            int i = 0;
+            for(dtype val : list)
+                this->get_data()[i++] = val;
+        } else {
+            throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
+        }
+    }
+
+    void operator=(const std::vector<dtype>& other) {
+        if(this->_shape.get_Ndim() == 1 && this->_shape[0] == other.size()) {
+            std::copy(
+                other.begin(),
+                other.end(),
+                this->get_data()
+            );
+        } else {
+            throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
+        }
+    }
+
+    void operator=(std::vector<dtype>&& other) {
+        if(this->_shape.get_Ndim() == 1 && this->_shape[0] == other.size()) {
+            std::move(
+                other.begin(),
+                other.end(),
+                this->get_data()
+            );
+        } else {
+            throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
+        }
+    }
+
+    void operator=(dtype val) {
+        if(this->_shape == Shape{1}) {
+            this->get_data()[0] = val;
         }
     }
 
