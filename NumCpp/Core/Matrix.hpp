@@ -16,9 +16,6 @@ protected:
 
 public:
     /* ====== Constructors ====== */
-    // using NArray<dtype>::NArray;  // inherit constructors
-    // TODO: Delete all unwanted constructors or only include the constructors needed for matrix
-    // TODO: Reimplement the recursive constructor to always ensure a total of two dimensions
 
     // Default constructor
     Matrix() : NArray<dtype>() {}
@@ -29,7 +26,19 @@ public:
 
 
     // Move constructor
-    Matrix(Matrix && mat) noexcept : NArray<dtype>(std::move(mat)) {}
+    Matrix(Matrix&& mat) noexcept : NArray<dtype>(std::move(mat)) {}
+
+
+    // Constructor from NArray (copy)
+    Matrix(const NArray<dtype>& arr) : NArray<dtype>(arr) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+
+    // Constructor from NArray (move)
+    Matrix(NArray<dtype>&& mat) noexcept : NArray<dtype>(std::move(mat)) {
+        check_and_adjust_shape(this->_shape);
+    }
 
 
     // Scalar constructor
@@ -76,6 +85,26 @@ public:
     }
 
 
+    // Data + shape constructor from shared pointer
+    Matrix(std::shared_ptr<dtype> sp, const Shape& shape) : NArray<dtype>(sp, shape) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+    Matrix(std::shared_ptr<dtype> sp, Shape&& shape) : NArray<dtype>(sp, shape) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+
+    // Shape + initializer value constructor
+    Matrix(const Shape& shape, dtype val = 0) : NArray<dtype>(shape, val) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+    Matrix(Shape&& shape, dtype val = 0) : NArray<dtype>(shape, val) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+
     // Constructor from other NArrays
     template <typename... Arrays>
     Matrix(const NArray<dtype>& first, const NArray<dtype>& next, const Arrays&... rest) {
@@ -98,7 +127,39 @@ public:
     }
 
 
+    // Nested initializer_list constructor
+    Matrix(std::initializer_list<std::initializer_list<dtype>> list) : NArray<dtype>() {
+
+        // Shape validation
+        if (list.size() == 0 || list.begin()->size() == 0) {
+            throw error::ValueError("Empty initializer list");
+        }
+
+        size_t rows = list.size();
+        size_t cols = list.begin()->size();
+
+        for (const auto& row : list) {
+            if (row.size() != cols) {
+                throw error::ValueError("Jagged initializer lists are not supported.");
+            }
+        }
+
+        // Matrix initialisation
+        this->_shape = Shape{rows, cols};
+        this->_data_ptr = std::shared_ptr<dtype>(new dtype[this->_shape.get_total_size()], std::default_delete<dtype[]>());
+
+        size_t count = 0;
+        for(const auto& row : list) {
+            for(const auto& element : row) {
+                this->_data_ptr.get()[count++] = element;
+            }
+        }
+    }
+
+
+
     /* ====== Operator Overloads ====== */
+
     // Multiplication Overloads
     Matrix<dtype> operator*(const Matrix<dtype>& other) const {
         if (!are_multipliable(*this, other)) {
@@ -109,7 +170,7 @@ public:
             other._data_ptr.get(), other._shape
         );
         auto out_shape = Shape::get_product_shape(this->_shape, other._shape);
-        return Matrix(out_data, out_shape);
+        return Matrix(std::move(out_data), out_shape);
     }
 
     NArray<dtype> operator*(const NArray<dtype>& other) const override {
@@ -132,18 +193,32 @@ public:
     }
 
 
+
     /* ====== Helper Functions ====== */
 
+    // Checks if two matrices can be multiplied
     static bool are_multipliable(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
         return static_cast<bool>(Shape::get_matmul_type(lmat.get_shape(), rmat.get_shape()));
     }
 
+
+    // Does what the name says
     Matrix transpose() {
-        auto out_shape = _shape.transpose();
+        auto out_shape = this->_shape.transpose();
         auto out_data_ptr = this->get_data_copy_as_shared_ptr();
         util::transpose(out_data_ptr.get(), this->_shape);
         return Matrix(out_data_ptr, out_shape);
     }
+
+
+    // Returns a deep copy of the Matrix
+    Matrix deepcopy() { return Matrix(*this); }
+
+
+    // Returns a shallow copy of th Matrix
+    Matrix copy() { return Matrix(this->_data_ptr, this->_shape); }
+
+
 
 private:
     void check_and_adjust_shape(Shape& shape) {

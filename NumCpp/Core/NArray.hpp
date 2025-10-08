@@ -271,7 +271,7 @@ public:
     }
 
 
-    // List constructor
+    // initializer_list constructor
     NArray(std::initializer_list<dtype> list) :
         _data_ptr(new dtype[list.size()], std::default_delete<dtype[]>()),
         _shape({static_cast<size_t>(list.size())})
@@ -283,6 +283,7 @@ public:
 
 
     // Array constructor from heap array (ownership takeover)
+    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it.
     NArray(dtype *array, const size_t& size) : _data_ptr(array), _shape({size}) {}
 
 
@@ -372,11 +373,10 @@ public:
         _data_ptr(new dtype[vec.size()], std::default_delete<dtype[]>()),
         _shape(shape)
     {
-        std::move(vec.begin(), vec.end(), _data_ptr.get());
-
         if (this->_shape.get_total_size() != vec.size()) {
             throw error::ValueError("Cannot construct NArray because Shape and data size don't match.");
         }
+        std::move(vec.begin(), vec.end(), _data_ptr.get());
     }
 
 
@@ -427,13 +427,16 @@ public:
 
 
     // Constructor from shared_ptr (used for slicing)
-    NArray(std::shared_ptr<dtype> base, dtype* slice_start, Shape new_shape)
+    NArray(std::shared_ptr<dtype> base, dtype* slice_start, Shape&& new_shape)
         : _data_ptr(base, slice_start), _shape(std::move(new_shape)) {}
+
+    NArray(std::shared_ptr<dtype> base, dtype* slice_start, const Shape& new_shape)
+        : _data_ptr(base, slice_start), _shape(new_shape) {}
 
 
     // Shared pointer + shape constructor
     NArray(std::shared_ptr<dtype> sp, const Shape& shape) : _data_ptr(sp), _shape(shape) {}
-    NArray(std::shared_ptr<dtype>&& sp, Shape&& shape) : _data_ptr(std::move(sp)), _shape(std::move(shape)) {}
+    NArray(const std::shared_ptr<dtype>& sp, Shape&& shape) : _data_ptr(sp), _shape(std::move(shape)) {}
 
 
     // Raw pointer + shape constructor
@@ -601,7 +604,7 @@ public:
         } else {
             auto slice_start = _data_ptr.get() + _shape[1] * index;
             auto new_shape = Shape(_shape.dimensions.begin() + 1, _shape.dimensions.end());
-            return NArray<dtype>(_data_ptr, slice_start, new_shape);
+            return NArray<dtype>(_data_ptr, slice_start, std::move(new_shape));
         }
     }
 
@@ -690,8 +693,12 @@ public:
     NArray ravel() { return NArray(_data_ptr, _shape.flatten()); }
 
 
-    // Returns a copy of the array
-    NArray copy() { return NArray(*this); }
+    // Returns a deep copy of the NArray
+    NArray deepcopy() { return NArray(*this); }
+
+
+    // Returns a shallow copy of the NArray
+    NArray copy() { return NArray(_data_ptr, _shape); }
 
 };
 
