@@ -54,8 +54,16 @@ bool is_scientific(T num) {
 // TODO: cache result for later use?
 template <typename T>
 int get_left_padding(T num) {
-    if(num == 0) return 1;
-    else return static_cast<int>(std::log10(std::abs(num)) + 1);
+    if (num == 0) return 1;
+    
+    if constexpr (std::is_floating_point_v<T>) {
+        T integer_part = std::floor(std::abs(num));
+        if (integer_part == 0)
+            return 1;
+        return static_cast<int>(std::log10(integer_part) + 1);
+    } else {
+        return static_cast<int>(std::log10(std::abs(num)) + 1);
+    }
 }
 
 // TODO: cache result for later use?
@@ -177,8 +185,8 @@ std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes)
                 :   pad_right(result, attributes.right_padding + get_left_padding(num) + 2 - num_str.size());
             } else {
                 num >= 0 ?
-                    pad_right(result, attributes.right_padding + get_left_padding(num) - num_str.size())
-                :   pad_right(result, attributes.right_padding + get_left_padding(num) + 1 - num_str.size());
+                    pad_right(result, get_left_padding(num) - num_str.size())
+                :   pad_right(result, get_left_padding(num) + 1 - num_str.size());
             }
         }
     }
