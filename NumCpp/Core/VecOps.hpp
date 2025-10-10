@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cmath>
+#include <type_traits>
 
 #include "Shape.hpp"
 #include "NArray.hpp"
@@ -79,35 +80,21 @@ dtype vdot(const NArray<dtype>& a, const NArray<dtype>& b) {
 }
 
 
-// Used for exponentiation
-template <typename dtype>
-NArray<dtype> pow(const NArray<dtype>& arr, const int& exponent) {
-    NArray<dtype> out(arr);
-    dtype* data = out.get_data();
-    for(int i = 0; i < arr.get_shape().get_total_size(); i++) {
-        data[i] = std::pow(data[i], exponent);
-    }
-    return out;
-}
-
-template <typename T, typename U>
-inline auto pow(T base, U exponent) -> decltype(std::pow(base, exponent)) {
-    return std::pow(base, exponent);
-}
-
-
 // Returns the elementwise multiplication of two arrays of any dimanesion
-template <typename dtype>
-NArray<dtype> hadamard(const NArray<dtype>& larr, const NArray<dtype>& rarr) {
-    if(larr.get_shape() != rarr.get_shape())
+template <typename T, typename U>
+auto hadamard(const NArray<T>& larr, const NArray<U>& rarr)
+    -> NArray<std::common_type_t<T, U>>
+{
+    if (larr.get_shape() != rarr.get_shape())
         throw error::ShapeError(larr.get_shape(), rarr.get_shape(), "multiply");
-    else {
-        std::vector<dtype> out_vec = util::elementwiseOP(
-            larr.get_data(), rarr.get_data(),
-            larr.get_shape().get_total_size(), &util::multiply<dtype>
-        );
-        return NArray<dtype>(std::move(out_vec), larr.get_shape());
-    }
+
+    using R = std::common_type_t<T, U>;
+    NArray<R> out(larr.get_shape());
+
+    for (size_t i = 0; i < larr.get_total_size(); i++)
+        out.get_data()[i] = static_cast<R>(larr[i]) * static_cast<R>(rarr[i]);
+
+    return out;
 }
 
 } // namespace numcpp

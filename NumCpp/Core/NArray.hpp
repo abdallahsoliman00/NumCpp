@@ -65,9 +65,12 @@ public:
 protected:
     /* ====== Helper Functions ====== */
 
+    // begin iterator over the NArray's data
     dtype* begin() { return _data_ptr.get(); }
 
+    // end iterator over the NArray's data
     dtype* end() { return _data_ptr.get() + _shape.get_total_size(); }
+
 
     // Gets the total size required to store multiple NArrays
     static void get_size_requirements(
@@ -507,7 +510,7 @@ public:
 
     /* Scalar Overloads */
 
-    // Exponent overload
+    // Right exponent overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator^(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::pow<dtype>);
@@ -539,6 +542,13 @@ public:
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator/(T num) const {
         return fullVecOpR(static_cast<dtype>(num), &util::divide<dtype>);
+    }
+
+
+    // Left base overload
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    friend NArray operator^(T num, const NArray& arr) {
+        return arr.fullVecOpL(static_cast<dtype>(num), &util::pow<dtype>);
     }
 
 

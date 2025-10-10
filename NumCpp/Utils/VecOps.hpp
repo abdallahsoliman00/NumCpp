@@ -99,20 +99,4 @@ std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
     return vout;
 }
 
-
-// Returns a vector of the elementwise multiplication of two input arrays
-template <typename dtype>
-std::vector<dtype> elementwiseOP(
-    const dtype* larr,
-    const dtype* rarr,
-    const size_t size,
-    std::function<dtype(dtype, dtype)> func
-) {
-    std::vector<dtype> out(size);
-    for(size_t i = 0; i < size; i++) {
-        out[i] = func(larr[i], rarr[i]);
-    }
-    return out;
-}
-
 } // namespace numcpp::util
