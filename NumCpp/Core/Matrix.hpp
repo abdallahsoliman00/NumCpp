@@ -160,33 +160,47 @@ public:
 
     /* ====== Operator Overloads ====== */
 
+    // template <typename T>
+    // auto operator*(const NArray<T>&) const = delete;
+
     // Multiplication Overloads
-    Matrix<dtype> operator*(const Matrix<dtype>& other) const {
+    template <typename T>
+    auto operator*(const Matrix<T>& other)
+        const -> Matrix<std::common_type_t<dtype, T>>
+    {
+        using U = std::common_type_t<dtype, T>;
+
         if (!are_multipliable(*this, other)) {
-            throw error::ShapeError(this->_shape, other._shape, "multiply");
+            throw error::ShapeError(this->_shape, other.get_shape(), "multiply");
         }
-        auto out_data = util::matmul(
+        auto out_data = util::matmul<dtype, T>(
             this->_data_ptr.get(), this->_shape,
-            other._data_ptr.get(), other._shape
+            other.get_data(), other.get_shape()
         );
-        auto out_shape = Shape::get_product_shape(this->_shape, other._shape);
-        return Matrix(std::move(out_data), out_shape);
+        auto out_shape = Shape::get_product_shape(this->_shape, other.get_shape());
+        return Matrix<U>(std::move(out_data), out_shape);
     }
 
-    NArray<dtype> operator*(const NArray<dtype>& other) const override {
-        if(const auto* matrix_other = dynamic_cast<const Matrix<dtype>*>(&other)) {
+    template <typename T>
+    auto operator*(const NArray<T>& other)
+        const -> NArray<std::common_type_t<dtype, T>>
+    {
+        using U = std::common_type_t<dtype, T>;
+
+        // Try downcasting to a Matrix<T> and using the preious function's logic
+        if(const auto* matrix_other = dynamic_cast<const Matrix<T>*>(&other)) {
             return this->operator*(*matrix_other);
         }
         
         // Check if it's a valid 2D NArray that can be treated as a matrix
-        if(!are_multipliable(*this, other)) {
+        if(are_multipliable(*this, other)) {
             // Treat the NArray as a matrix for multiplication
-            auto out_data = util::matmul(
+            auto out_data = util::matmul<dtype, T>(
                 this->get_data(), this->get_shape(),
                 other.get_data(), other.get_shape()
             );
             auto out_shape = Shape::get_product_shape(this->_shape, other.get_shape());
-            return Matrix(std::move(out_data), out_shape);
+            return Matrix<U>(std::move(out_data), out_shape);
         }
         
         throw error::ShapeError(this->_shape, other.get_shape(), "multiply");
@@ -197,7 +211,8 @@ public:
     /* ====== Helper Functions ====== */
 
     // Checks if two matrices can be multiplied
-    static bool are_multipliable(const NArray<dtype>& lmat, const NArray<dtype>& rmat) {
+    template <typename T, typename U>
+    static bool are_multipliable(const NArray<T>& lmat, const NArray<U>& rmat) {
         return static_cast<bool>(Shape::get_matmul_type(lmat.get_shape(), rmat.get_shape()));
     }
 

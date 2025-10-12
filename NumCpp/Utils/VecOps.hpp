@@ -2,6 +2,7 @@
 #pragma once
 
 #include <vector>
+#include <type_traits>
 
 #include "../Core/Shape.hpp"
 
@@ -9,13 +10,15 @@
 namespace numcpp::util {
 
 // Returns a vector containing the flattened matrix product
-template <typename dtype>
-std::vector<dtype> matmul(
+template <typename dtype, typename T>
+auto matmul(
     const dtype* larr, const Shape& lshape,
-    const dtype* rarr, const Shape& rshape
-) {
+    const T* rarr, const Shape& rshape
+) -> std::vector<std::common_type_t<dtype, T>>
+{
+    using U = std::common_type_t<dtype, T>;
     auto out_shape = Shape::get_product_shape(lshape, rshape);
-    std::vector<dtype> out(out_shape.get_total_size(), static_cast<dtype>(0));
+    std::vector<U> out(out_shape.get_total_size());
     
     int m,k,n;
 

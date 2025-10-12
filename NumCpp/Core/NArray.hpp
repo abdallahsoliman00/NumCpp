@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "Shape.hpp"
-#include "../Utils/MathOps.hpp"
 #include "../Utils/VecOps.hpp"
 #include "../Utils/Errors.hpp"
 #include "../Utils/Copy.hpp"
@@ -138,10 +137,15 @@ protected:
 
 
     // Elementwise operation of two NArrays
-    NArray elementWiseOp(
-        const NArray &other, std::function<dtype(dtype, dtype)> func
-    ) const {
-        NArray<dtype> out(this->_shape);
+    template <typename T, typename Func>
+    auto elementWiseOp(
+        const NArray<T> &other,
+        Func func
+    ) const -> NArray<decltype(func(std::declval<dtype>(), std::declval<T>()))>
+    {
+        using U = decltype(func(std::declval<dtype>(), std::declval<T>()));
+        NArray<U> out(_shape);
+
         for(size_t i = 0; i < _shape.get_total_size(); i++) {
             out.get_data()[i] = func(this->get_data()[i], other.get_data()[i]);
         }
@@ -149,18 +153,28 @@ protected:
     }
 
 
-    // Right scalar operation to NArrays
-    NArray fullVecOpR(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
-        std::vector<dtype> newVec(_shape.get_total_size());
+    // Performs the scalar operation to the right of each element in the array
+    template <typename T, typename Func>
+    auto fullVecOpR(const T scalar, Func func)
+        const -> NArray<decltype(func(std::declval<dtype>(), std::declval<T>()))>
+    {
+        using U = decltype(func(std::declval<dtype>(), std::declval<T>()));
+
+        std::vector<U> newVec(_shape.get_total_size());
         for(size_t i = 0; i < _shape.get_total_size(); i++) {
             newVec[i] = func(get_data()[i], scalar);
         }
-        return NArray(std::move(newVec), _shape);
+        return NArray<U>(std::move(newVec), _shape);
     }
 
 
-    // Left scalar operation to NArrays
-    NArray fullVecOpL(const dtype& scalar, std::function<dtype(dtype, dtype)> func) const {
+    // Performs the scalar operation to the left of each element in the array
+    template <typename T, typename Func>
+    auto fullVecOpL(const T scalar, Func func)
+        const -> NArray<decltype(func(std::declval<T>(), std::declval<dtype>()))>
+    {
+        using U = decltype(func(std::declval<T>(), std::declval<dtype>()));
+
         std::vector<dtype> newVec(_shape.get_total_size());
         for(size_t i = 0; i < _shape.get_total_size(); i++) {
             newVec[i] = func(scalar, get_data()[i]);
@@ -170,7 +184,8 @@ protected:
 
 
     // Returns a mask of which NArray elements are the same
-    NArray<bool> elementwiseCompare(const NArray& other, std::function<bool(dtype,dtype)> comparison_func) const {
+    template <typename T, typename Func>
+    NArray<bool> elementwiseCompare(const NArray& other, Func comparison_func) const {
         if(!same_shape(*this, other)) {
             throw error::ShapeError(this->_shape, other._shape, "compare");
         }
@@ -290,7 +305,7 @@ public:
 
 
     // Array constructor from heap array (ownership takeover)
-    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it.
+    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it properly.
     NArray(dtype *array, const size_t& size) : _data_ptr(array), _shape({size}) {}
 
 
@@ -447,7 +462,7 @@ public:
 
 
     // Raw pointer + shape constructor
-    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it.
+    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it properly.
     NArray(dtype* ptr, const Shape& shape) : _data_ptr(ptr), _shape(shape) {}
     NArray(dtype* ptr, Shape&& shape) : _data_ptr(ptr), _shape(std::move(shape)) {}
 
@@ -469,42 +484,50 @@ public:
     }
 
 
+    /* ====== Destructor ====== */
+    virtual ~NArray() = default;
+
+
 
     /* ====== Operator Overloading ====== */
 
     // Array addition
-    NArray operator+(const NArray& other) const {
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    auto operator+(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "add");
         else
-            return elementWiseOp(other, &util::add<dtype>);
+            return elementWiseOp(other, [] (auto a, auto b) { return a + b; } );
     }
 
 
     // Array subtraction
-    NArray operator-(const NArray& other) const {
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    auto operator-(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "subtract");
         else
-            return elementWiseOp(other, &util::subtract<dtype>);
+            return elementWiseOp(other, [] (auto a, auto b) { return a - b; } );
     }
 
 
     // Array multiplication
-    virtual NArray operator*(const NArray& other) const {
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    auto operator*(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "multiply");
         else
-            return elementWiseOp(other, &util::multiply<dtype>);
+            return elementWiseOp(other, [] (auto a, auto b) { return a * b; } );
     }
 
 
     // Array division
-    NArray operator/(const NArray& other) const {
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    auto operator/(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "divide");
         else
-            return elementWiseOp(other, &util::divide<dtype>);
+            return elementWiseOp(other, [] (auto a, auto b) { return a / b; } );
     }
 
 
@@ -513,97 +536,104 @@ public:
     // Right exponent overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator^(T num) const {
-        return fullVecOpR(static_cast<dtype>(num), &util::pow<dtype>);
+        return fullVecOpR(num, [] (dtype b, T e) { return std::pow(b,e); });
     }
 
 
     // Right addition overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator+(T num) const {
-        return fullVecOpR(static_cast<dtype>(num), &util::add<dtype>);
+        return fullVecOpR(num, [] (dtype a, T b) { return a + b; });
     }
 
 
     // Right subtraction overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator-(T num) const {
-        return fullVecOpR(static_cast<dtype>(num), &util::subtract<dtype>);
+        return fullVecOpR(num, [] (dtype a, T b) { return a + b; });
     }
 
 
     // Right multiplication overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator*(T num) const {
-        return fullVecOpR(static_cast<dtype>(num), &util::multiply<dtype>);
+        return fullVecOpR(num, [] (dtype a, T b) { return a * b; });
     }
 
 
     // Right division overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray operator/(T num) const {
-        return fullVecOpR(static_cast<dtype>(num), &util::divide<dtype>);
+        return fullVecOpR(num, [] (dtype a, T b) { return a / b; });
     }
+
 
 
     // Left base overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator^(T num, const NArray& arr) {
-        return arr.fullVecOpL(static_cast<dtype>(num), &util::pow<dtype>);
+        return arr.fullVecOpL(num, [] (T b, dtype e) { return std::pow(b,e); });
     }
 
 
     // Left addition overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator+(T num, const NArray& arr) {
-        return arr.fullVecOpL(static_cast<dtype>(num), &util::add<dtype>);
+        return arr.fullVecOpL(num, [] (T a, dtype b) { return a + b; });
     }
 
 
     // Left subtraction overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator-(T num, const NArray& arr) {
-        return arr.fullVecOpL(static_cast<dtype>(num), &util::subtract<dtype>);
+        return arr.fullVecOpL(num, [] (T a, dtype b) { return a - b; });
     }
 
 
     // Left multiplication overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator*(T num, const NArray& arr) {
-        return arr.fullVecOpL(static_cast<dtype>(num), &util::multiply<dtype>);
+        return arr.fullVecOpL(num, [] (T a, dtype b) { return a * b; });
     }
 
 
     // Left division overload
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     friend NArray operator/(T num, const NArray& arr) {
-        return arr.fullVecOpL(static_cast<dtype>(num), &util::divide<dtype>);
+        return arr.fullVecOpL(num, [] (T a, dtype b) { return a / b; });
     }
 
 
     /* Comparison Overloads */
 
-    NArray<bool> operator==(const NArray& other) const {
-        return elementwiseCompare(other, &util::eq<dtype>);
+    template <typename T>
+    NArray<bool> operator==(const NArray<T>& other) const {
+        return elementwiseCompare(other, [] (dtype a, T b) { return a == b; } );
     }
 
-    NArray<bool> operator!=(const NArray& other) const {
-        return elementwiseCompare(other, &util::neq<dtype>);
+    template <typename T>
+    NArray<bool> operator!=(const NArray<T>& other) const {
+        return elementwiseCompare(other, [] (dtype a, T b) { return a != b; } );
     }
 
-    NArray<bool> operator<=(const NArray& other) const {
-        return elementwiseCompare(other, &util::leq<dtype>);
+    template <typename T>
+    NArray<bool> operator<=(const NArray<T>& other) const {
+        return elementwiseCompare(other, [] (dtype a, T b) { return a <= b; });
     }
 
-    NArray<bool> operator>=(const NArray& other) const {
-        return elementwiseCompare(other, &util::geq<dtype>);
+    template <typename T>
+    NArray<bool> operator>=(const NArray<T>& other) const {
+        return elementwiseCompare(other, [] (dtype a, T b) { return a >= b; });
     }
 
-    NArray<bool> operator<(const NArray& other) const {
-        return elementwiseCompare(other, &util::less_than<dtype>);
+    template <typename T>
+    NArray<bool> operator<(const NArray<T>& other) const {
+        return elementwiseCompare(other, [] (dtype a, T b) { return a < b; });
     }
 
-    NArray<bool> operator>(const NArray& other) const {
-        return elementwiseCompare(other, &util::greater_than<dtype>);
+    template <typename T>
+    NArray<bool> operator>(const NArray<T>& other) const {
+        return elementwiseCompare(other, [] (dtype a, T b) { return a > b; });
     }
 
 

@@ -4,44 +4,43 @@
 #include "NArray.hpp"
 #include <cmath>
 
-// TODO: Check for types. Cannot create a zeros array of char
 namespace numcpp {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> zeros(const size_t& size) {
         return NArray<T>(size, static_cast<T>(0));
     }
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> zeros(const Shape& shape) {
         return NArray<T>(shape, static_cast<T>(0));
     }
 
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> zeros_like(const NArray<T>& other) {
         return NArray<T>(other.get_shape(), static_cast<T>(0));
     }
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> zeros_like(const std::vector<T>& other) {
         return NArray<T>(other.size(), static_cast<T>(0));
     }
 
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> ones(const size_t& size) {
         return NArray<T>(size, static_cast<T>(1));
     }
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> ones(const Shape& shape) {
         return NArray<T>(shape, static_cast<T>(1));
     }
 
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> ones_like(const NArray<T>& other) {
         return NArray<T>(other.get_shape(), static_cast<T>(1));
     }
@@ -69,7 +68,7 @@ namespace numcpp {
     }
 
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> eye(size_t n, size_t m = 0) {
         if (m == 0) m = n;
 
@@ -83,7 +82,7 @@ namespace numcpp {
     }
 
 
-    template <typename T = double>
+    template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<T> identity(size_t n) {
         return eye<T>(n);
     }

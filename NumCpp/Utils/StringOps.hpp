@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iomanip>
 
-#include "MathOps.hpp"
+#include "../MathOps.hpp"
 
 namespace numcpp::util {
 
@@ -109,8 +109,8 @@ PrintAttributes GetPrintAttributes(dtype* data_ptr, size_t arrsize) {
 
         // Get the largest exponent in case scientific notation is used
         int _exp = get_exponent(data_ptr[i]);
-        if (_exp > attributes.largest_exponent)
-            attributes.largest_exponent = _exp;
+        if (std::abs(_exp) > attributes.largest_exponent)
+            attributes.largest_exponent = std::abs(_exp);
 
         // Check if negative
         if(data_ptr[i] < 0)
