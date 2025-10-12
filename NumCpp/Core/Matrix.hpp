@@ -96,11 +96,21 @@ public:
 
 
     // Shape + initializer value constructor
-    Matrix(const Shape& shape, dtype val = 0) : NArray<dtype>(shape, val) {
+    Matrix(const Shape& shape, dtype val) : NArray<dtype>(shape, val) {
         check_and_adjust_shape(this->_shape);
     }
 
-    Matrix(Shape&& shape, dtype val = 0) : NArray<dtype>(shape, val) {
+    Matrix(Shape&& shape, dtype val) : NArray<dtype>(shape, val) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+
+    // Empty shape constructor
+    Matrix(const Shape& shape) : NArray<dtype>(shape) {
+        check_and_adjust_shape(this->_shape);
+    }
+
+    Matrix(Shape&& shape) : NArray<dtype>(shape) {
         check_and_adjust_shape(this->_shape);
     }
 
@@ -160,15 +170,12 @@ public:
 
     /* ====== Operator Overloads ====== */
 
-    // template <typename T>
-    // auto operator*(const NArray<T>&) const = delete;
-
     // Multiplication Overloads
     template <typename T>
     auto operator*(const Matrix<T>& other)
-        const -> Matrix<std::common_type_t<dtype, T>>
+        const -> Matrix<decltype(std::declval<dtype>() * std::declval<T>())>
     {
-        using U = std::common_type_t<dtype, T>;
+        using U = decltype(std::declval<dtype>() * std::declval<T>());
 
         if (!are_multipliable(*this, other)) {
             throw error::ShapeError(this->_shape, other.get_shape(), "multiply");
@@ -183,9 +190,9 @@ public:
 
     template <typename T>
     auto operator*(const NArray<T>& other)
-        const -> NArray<std::common_type_t<dtype, T>>
+        const -> NArray<decltype(std::declval<dtype>() * std::declval<T>())>
     {
-        using U = std::common_type_t<dtype, T>;
+        using U = decltype(std::declval<dtype>() * std::declval<T>());
 
         // Try downcasting to a Matrix<T> and using the preious function's logic
         if(const auto* matrix_other = dynamic_cast<const Matrix<T>*>(&other)) {

@@ -2,7 +2,6 @@
 #pragma once
 
 #include <vector>
-#include <type_traits>
 
 #include "../Core/Shape.hpp"
 
@@ -14,9 +13,9 @@ template <typename dtype, typename T>
 auto matmul(
     const dtype* larr, const Shape& lshape,
     const T* rarr, const Shape& rshape
-) -> std::vector<std::common_type_t<dtype, T>>
+) -> std::vector<decltype(std::declval<dtype>() * std::declval<T>())>
 {
-    using U = std::common_type_t<dtype, T>;
+    using U = decltype(std::declval<dtype>() * std::declval<T>());
     auto out_shape = Shape::get_product_shape(lshape, rshape);
     std::vector<U> out(out_shape.get_total_size());
     

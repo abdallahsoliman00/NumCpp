@@ -194,7 +194,7 @@ protected:
             for(size_t i = 0; i < _shape.get_total_size(); i++) {
                 newVec[i] = comparison_func(get_data()[i], other.get_data()[i]);
             }
-            return NArray<bool>(newVec, _shape);
+            return NArray<bool>(std::move(newVec), _shape);
         }
     }
 
@@ -345,7 +345,7 @@ public:
 
 
     // Repeat constructor
-    NArray(size_t count, dtype val = 0) :
+    NArray(size_t count, dtype val) :
         _data_ptr(new dtype[count], std::default_delete<dtype[]>()),
         _shape({count})
     {
@@ -431,7 +431,7 @@ public:
 
 
     // Shape + initializer value constructor
-    NArray(const Shape& shape, dtype val = 0) :
+    NArray(const Shape& shape, dtype val) :
         _data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
         _shape(shape)
     {
@@ -439,13 +439,23 @@ public:
             _data_ptr.get()[i] = val;
     }
 
-    NArray(Shape&& shape, dtype val = 0) :
+    NArray(Shape&& shape, dtype val) :
         _data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
         _shape(std::move(shape))
     {
         for(size_t i = 0; i < _shape.get_total_size(); i++)
             _data_ptr.get()[i] = val;
     }
+
+
+    // Empty shape constructor
+    NArray(const Shape& shape) :
+        _data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
+        _shape(shape) {}
+    
+    NArray(Shape&& shape) :
+        _data_ptr(new dtype[shape.get_total_size()], std::default_delete<dtype[]>()),
+        _shape(std::move(shape)) {}
 
 
     // Constructor from shared_ptr (used for slicing)
