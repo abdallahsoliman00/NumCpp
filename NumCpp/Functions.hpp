@@ -3,13 +3,12 @@
 
 #include <cmath>
 
-#include "Core/Matrix.hpp"
 #include "Utils/FuncUtils.hpp"
 
 
 namespace numcpp {
 
-/* ====== Trigonomeric Functions ====== */
+/* ====== Trigonometric Functions ====== */
 
 template <typename dtype, typename = std::enable_if_t<std::is_arithmetic_v<dtype>>>
 auto sin(const NArray<dtype>& arr) {

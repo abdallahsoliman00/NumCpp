@@ -2,7 +2,6 @@
 #pragma once
 
 #include "NArray.hpp"
-#include <cmath>
 
 namespace numcpp {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
@@ -46,7 +45,7 @@ namespace numcpp {
     }
 
 
-    NArray<double> linspace(const float& start, const float& stop, const size_t& count, const bool& endpoint = true) {
+    inline NArray<double> linspace(const float& start, const float& stop, const size_t& count, const bool& endpoint = true) {
         float step = (stop - start)/(count - static_cast<float>(endpoint));
         std::vector<double> out(count);
 
@@ -57,8 +56,8 @@ namespace numcpp {
     }
 
 
-    NArray<double> arange(const float& start, const float& stop, const float& step = 1) {
-        size_t count = static_cast<size_t>(1 + (stop - start)/step);
+    inline NArray<double> arange(const float& start, const float& stop, const float& step = 1) {
+        auto count = static_cast<size_t>(1 + (stop - start)/step);
         std::vector<double> out(count);
 
         for(size_t i = 1; i < count; i++) {
@@ -83,7 +82,7 @@ namespace numcpp {
 
 
     template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    NArray<T> identity(size_t n) {
+    NArray<T> identity(const size_t n) {
         return eye<T>(n);
     }
 
@@ -104,7 +103,7 @@ namespace numcpp {
     }
 
     template <typename T = double>
-    NArray<T> empty(size_t size) {
+    NArray<T> empty(const size_t size) {
         return NArray<T>(Shape(size));
     }
 

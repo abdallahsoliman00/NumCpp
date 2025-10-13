@@ -194,7 +194,7 @@ public:
     {
         using U = decltype(std::declval<dtype>() * std::declval<T>());
 
-        // Try downcasting to a Matrix<T> and using the preious function's logic
+        // Try downcasting to a Matrix<T> and using the previous function's logic
         if(const auto* matrix_other = dynamic_cast<const Matrix<T>*>(&other)) {
             return this->operator*(*matrix_other);
         }
@@ -233,17 +233,8 @@ public:
     }
 
 
-    // Returns a deep copy of the Matrix
-    Matrix deepcopy() { return Matrix(*this); }
-
-
-    // Returns a shallow copy of th Matrix
-    Matrix copy() { return Matrix(this->_data_ptr, this->_shape); }
-
-
-
 private:
-    void check_and_adjust_shape(Shape& shape) {
+    static void check_and_adjust_shape(Shape& shape) {
         if(shape.get_Ndim() == 1)
             shape = Shape{1,shape[0]};
         else if(shape.get_Ndim() > 2 || shape.get_Ndim() < 1)

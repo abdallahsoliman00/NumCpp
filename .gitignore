@@ -1,3 +1,5 @@
 test.*
 .vscode/
 *.exe
+.idea/
+cmake-build-debug/
