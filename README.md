@@ -12,6 +12,7 @@ A C++ header-only library inspired by NumPy.
 
 
 ## How To Use
+This library was made completely in vanilla C++, so using it should be simple.
 - Simply clone this repository:
 ```shell
 git clone https://github.com/abdallahsoliman00/NumCpp.git
@@ -21,7 +22,7 @@ git clone https://github.com/abdallahsoliman00/NumCpp.git
 ```cpp
 #include "NumCpp/NumCpp.hpp"
 ```
-
+- You are now ready to use NumCpp.
 
 ## Project Status
 This project is still underway, but current features include:

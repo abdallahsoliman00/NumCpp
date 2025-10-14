@@ -4,6 +4,6 @@
 namespace numcpp {
 
     struct copy_t{};
-    inline constexpr copy_t copy{};
+    inline constexpr copy_t copies{};
 
 } // namespace numcpp

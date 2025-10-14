@@ -7,7 +7,7 @@
 namespace numcpp {
 
 template <typename dtype = double>
-class Matrix : public NArray<dtype> {
+class Matrix final : public NArray<dtype> {
 
 protected:
     using NArray<dtype>::_data_ptr;
@@ -30,29 +30,29 @@ public:
 
 
     // Constructor from NArray (copy)
-    Matrix(const NArray<dtype>& arr) : NArray<dtype>(arr) {
+    explicit Matrix(const NArray<dtype>& arr) : NArray<dtype>(arr) {
         check_and_adjust_shape(this->_shape);
     }
 
 
     // Constructor from NArray (move)
-    Matrix(NArray<dtype>&& mat) noexcept : NArray<dtype>(std::move(mat)) {
+    explicit Matrix(NArray<dtype>&& mat) noexcept : NArray<dtype>(std::move(mat)) {
         check_and_adjust_shape(this->_shape);
     }
 
 
     // Scalar constructor
-    Matrix(const dtype& num) : NArray<dtype>(num) {
+    explicit Matrix(const dtype& num) : NArray<dtype>(num) {
         this->_shape = Shape({1,1});
     }
 
 
     // Vector constructor
-    Matrix(const std::vector<dtype>& data) : NArray<dtype>(data) {
+    explicit Matrix(const std::vector<dtype>& data) : NArray<dtype>(data) {
         this->_shape = this->_shape.transpose();
     }
 
-    Matrix(std::vector<dtype>&& data) noexcept : NArray<dtype>(data) {
+    explicit Matrix(std::vector<dtype>&& data) noexcept : NArray<dtype>(data) {
         this->_shape = this->_shape.transpose();
     }
 
@@ -106,11 +106,11 @@ public:
 
 
     // Empty shape constructor
-    Matrix(const Shape& shape) : NArray<dtype>(shape) {
+    explicit Matrix(const Shape& shape) : NArray<dtype>(shape) {
         check_and_adjust_shape(this->_shape);
     }
 
-    Matrix(Shape&& shape) : NArray<dtype>(shape) {
+    explicit Matrix(Shape&& shape) : NArray<dtype>(shape) {
         check_and_adjust_shape(this->_shape);
     }
 
@@ -145,7 +145,7 @@ public:
             throw error::ValueError("Empty initializer list");
         }
 
-        size_t rows = list.size();
+        const size_t rows = list.size();
         size_t cols = list.begin()->size();
 
         for (const auto& row : list) {

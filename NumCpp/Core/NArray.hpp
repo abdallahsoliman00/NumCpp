@@ -3,7 +3,6 @@
 
 #include <utility>
 #include <vector>
-#include <functional>
 #include <string>
 #include <memory>
 
@@ -314,7 +313,7 @@ public:
         _data_ptr(new dtype[size], std::default_delete<dtype[]>()),
         _shape({size})
     {
-        // Use numcpp::copy as the first argument to copy
+        // Use numcpp::copies as the first argument to copy
         std::copy(array, array + size, _data_ptr.get());
     }
 
@@ -663,7 +662,7 @@ public:
 
 
     /* Assignment Overload */
-    void operator=(const NArray& other) {
+    NArray& operator=(const NArray& other) {
         if(same_shape(*this, other)) {
             std::copy(
                 other.get_data(),
@@ -673,9 +672,10 @@ public:
         } else {
             throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
         }
+        return *this;
     }
         
-    void operator=(NArray&& other) noexcept {
+    NArray& operator=(NArray&& other) noexcept {
         if(same_shape(*this, other)) {
             std::move(
                 other.get_data(),
@@ -685,9 +685,10 @@ public:
         } else {
             throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
         }
+        return *this;
     }
 
-    void operator=(std::initializer_list<dtype> list) {
+    NArray& operator=(std::initializer_list<dtype> list) {
         if(this->_shape.get_Ndim() == 1 && this->_shape[0] == list.size()) {
             int i = 0;
             for(dtype val : list)
@@ -695,9 +696,10 @@ public:
         } else {
             throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
         }
+        return *this;
     }
 
-    void operator=(const std::vector<dtype>& other) {
+    NArray& operator=(const std::vector<dtype>& other) {
         if(this->_shape.get_Ndim() == 1 && this->_shape[0] == other.size()) {
             std::copy(
                 other.begin(),
@@ -707,9 +709,10 @@ public:
         } else {
             throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
         }
+        return *this;
     }
 
-    void operator=(std::vector<dtype>&& other) {
+    NArray& operator=(std::vector<dtype>&& other) {
         if(this->_shape.get_Ndim() == 1 && this->_shape[0] == other.size()) {
             std::move(
                 other.begin(),
@@ -719,12 +722,14 @@ public:
         } else {
             throw error::ValueError("Could not overwrite data because LHS and RHS of the assignment are not equal.");
         }
+        return *this;
     }
 
-    void operator=(dtype val) {
+    NArray& operator=(dtype val) {
         if(this->_shape == Shape{1}) {
             this->get_data()[0] = val;
         }
+        return *this;
     }
 
 
