@@ -3,8 +3,6 @@
 
 #include <cmath>
 
-#include "Constants.hpp"
-
 
 namespace numcpp {
 

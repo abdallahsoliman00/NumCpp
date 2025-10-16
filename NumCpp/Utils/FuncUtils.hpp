@@ -2,7 +2,6 @@
 #pragma once
 
 #include "../Core/NArray.hpp"
-#include "../Core/Matrix.hpp"
 
 
 namespace numcpp::util {

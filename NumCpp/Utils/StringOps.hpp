@@ -9,9 +9,9 @@
 
 namespace numcpp::util {
 
-// A struct containing any atttributes that
-// will be used to format NArray printing
-typedef struct {
+/* A struct containing any attributes that
+will be used to format NArray printing */
+typedef struct PrintAttributes {
     bool is_scientific = false;
     int largest_exponent = 0;
     bool negative = false;
@@ -21,9 +21,9 @@ typedef struct {
 
 
 // Pads a number with eros to the left
-std::string fill_with_zeros(int number, int length = 2) {
+inline std::string fill_with_zeros(const int number, const int length = 2) {
     std::string num = std::to_string(number);
-    if ((int)num.size() < length)
+    if (static_cast<int>(num.size()) < length)
         return std::string(length - num.size(), '0') + num;
     return num;
 }
@@ -31,7 +31,7 @@ std::string fill_with_zeros(int number, int length = 2) {
 
 // Converts anything to a string, given this thing has an << overload.
 template <typename T>
-std::string toString(const T& obj, int float_precision = 0) {
+std::string toString(const T& obj, const int float_precision = 0) {
     std::ostringstream oss;
     if(float_precision == 0)
         oss << obj;
@@ -40,15 +40,15 @@ std::string toString(const T& obj, int float_precision = 0) {
     return oss.str();
 }
 
-void remove_trailing_zeros(std::string& num_str) {
+inline void remove_trailing_zeros(std::string& num_str) {
     while (!num_str.empty() && num_str.back() == '0')
         num_str.pop_back();
 }
 
 template <typename T>
 bool is_scientific(T num) {
-    T absnum = std::abs(num);
-    return ((absnum >= 1e6) || (absnum <= 1e-5 && absnum != 0)) && (!isinf(num));
+    T abs_num = std::abs(num);
+    return ((abs_num >= 1e6) || (abs_num <= 1e-5 && abs_num != 0)) && (!isinf(num));
 }
 
 // TODO: cache result for later use?
@@ -75,7 +75,7 @@ int get_right_padding(T num) {
     std::string s = toString(std::abs(num));
 
     // Find the decimal point
-    std::size_t dot = s.find('.');
+    const std::size_t dot = s.find('.');
     if (dot == std::string::npos)
         return 0;
 
@@ -86,17 +86,18 @@ int get_right_padding(T num) {
     return static_cast<int>(s.size() - dot - 1);
 }
 
+// TODO: cache result for later use?
 template <typename T>
 int get_exponent(T num) {
     if (num == 0) return 0;
-    double lognum = std::log10(std::abs(static_cast<double>(num)));
-    int exponent = static_cast<int>(std::floor(lognum));
+    const double lognum = std::log10(std::abs(static_cast<double>(num)));
+    const int exponent = static_cast<int>(std::floor(lognum));
     return exponent;
 }
 
 
 template <typename dtype>
-PrintAttributes GetPrintAttributes(dtype* data_ptr, size_t arrsize) {
+PrintAttributes GetPrintAttributes(dtype* data_ptr, const size_t arrsize) {
     PrintAttributes attributes;
 
     for(int i = 0; i < arrsize; i++) {
@@ -133,12 +134,12 @@ PrintAttributes GetPrintAttributes(dtype* data_ptr, size_t arrsize) {
 }
 
 template <typename T>
-std::string num_to_scientific(T num, int exponent_length) {
+std::string num_to_scientific(T num, const int exponent_length) {
     
     if(!isinf(num)) {
         std::string exp_sign;
-        int exponent = get_exponent(num);
-        double base = num * std::pow(10,-exponent);
+        const int exponent = get_exponent(num);
+        const double base = num * std::pow(10,-exponent);
 
         if(exponent >= 0) exp_sign = "e+";
         else exp_sign = "e-";   
@@ -148,12 +149,12 @@ std::string num_to_scientific(T num, int exponent_length) {
     }
 }
 
-void pad_left(std::string& str, int pad_depth) {
+inline void pad_left(std::string& str, const int pad_depth) {
     if(pad_depth)
         str.insert(0, pad_depth, ' ');
 }
 
-void pad_right(std::string& str, int pad_depth) {
+inline void pad_right(std::string& str, const int pad_depth) {
     if(pad_depth)
         str.append(pad_depth, ' ');
 }
@@ -163,10 +164,10 @@ void pad_right(std::string& str, int pad_depth) {
 template <typename T>
 std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes) {
     // Add space in place of -ve sign if num >= 0
-    std::string result = "";
+    std::string result;
     if(attributes.negative && (num >= 0)) result += " ";
 
-    // `is_scientific` oerrides all other print attributes
+    // `is_scientific` overrides all other print attributes
     if(attributes.is_scientific)
         result += num_to_scientific(num, get_left_padding(attributes.largest_exponent));
     else {

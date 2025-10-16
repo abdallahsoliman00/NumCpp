@@ -1,8 +1,6 @@
 /* VecOps.hpp */
 #pragma once
 
-#include <cmath>
-
 #include "Shape.hpp"
 #include "NArray.hpp"
 #include "Matrix.hpp"

@@ -9,7 +9,6 @@
 #include "Shape.hpp"
 #include "../Utils/VecOps.hpp"
 #include "../Utils/Errors.hpp"
-#include "../Utils/Copy.hpp"
 
 
 namespace numcpp {
@@ -218,7 +217,7 @@ protected:
     // Recursively prints the N-Dimensional arrays (> 2D arrays)
     static void recursivePrint(
         std::ostream& os, std::vector<dtype> data, const Shape& shape,
-        const util::PrintAttributes& attributes, int depth = 0
+        const util::PrintAttributes& attributes, const int depth = 0
     ) {
         // Base case
         if(shape.get_Ndim() == 1) {
@@ -230,7 +229,7 @@ protected:
         size_t n_grps = shape[0];
         auto groups = util::split(data, n_grps);
 
-        Shape subshape(shape.dimensions.begin() + 1, shape.dimensions.end());
+        const Shape subshape(shape.dimensions.begin() + 1, shape.dimensions.end());
         
         os << '[';
         for (size_t i = 0; i < n_grps; i++) {
@@ -304,21 +303,21 @@ public:
 
 
     // Array constructor from heap array (ownership takeover)
-    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it properly.
-    NArray(dtype *array, const size_t& size) : _data_ptr(array), _shape({size}) {}
+    template <typename Deleter>
+    NArray(dtype *array, const size_t& size, Deleter deleter) :
+        _data_ptr(array, deleter), _shape({size}) {}
 
 
     // Array constructor from heap array (copy)
-    NArray(copy_t, dtype *array, const size_t& size) :
+    NArray(dtype *array, const size_t& size) :
         _data_ptr(new dtype[size], std::default_delete<dtype[]>()),
         _shape({size})
     {
-        // Use numcpp::copies as the first argument to copy
         std::copy(array, array + size, _data_ptr.get());
     }
 
 
-    // Array constructor from stack array
+    // Array constructor from a stack array
     template <size_t N>
     explicit NArray(dtype (&array)[N]) : _data_ptr(new dtype[N], std::default_delete<dtype[]>()), _shape({N}) {
         for(size_t i = 0; i < N; i++)
@@ -470,10 +469,28 @@ public:
     NArray(const std::shared_ptr<dtype>& sp, Shape&& shape) : _data_ptr(sp), _shape(std::move(shape)) {}
 
 
-    // Raw pointer + shape constructor
-    // Warning: Use with caution. Memory must be managed manually as std::shared_ptr won't manage it properly.
-    NArray(dtype* ptr, const Shape& shape) : _data_ptr(ptr), _shape(shape) {}
-    NArray(dtype* ptr, Shape&& shape) : _data_ptr(ptr), _shape(std::move(shape)) {}
+    // Raw pointer + shape constructor (ownership takeover)
+    template <typename Deleter>
+    NArray(dtype* ptr, Shape shape, Deleter deleter) : _data_ptr(ptr, deleter), _shape(std::move(shape)) {}
+
+    template <typename Deleter>
+    NArray(dtype* ptr, Shape&& shape, Deleter deleter) : _data_ptr(ptr, deleter), _shape(std::move(shape)) {}
+
+
+    // Raw pointer + shape constructor (copy)
+    NArray(dtype* ptr, Shape shape) :
+        _data_ptr(new dtype[shape.get_total_size()],
+        std::default_delete<dtype[]>()), _shape(std::move(shape))
+    {
+        std::copy(ptr, ptr + _shape.get_total_size(), _data_ptr.get());
+    }
+
+    NArray(dtype* ptr, Shape&& shape) :
+    _data_ptr(new dtype[shape.get_total_size()],
+    std::default_delete<dtype[]>()), _shape(std::move(shape))
+    {
+        std::copy(ptr, ptr + _shape.get_total_size(), _data_ptr.get());
+    }
 
 
     // Constructor from other NArrays
@@ -846,8 +863,8 @@ template <typename T>
 NArray(T*, size_t) -> NArray<T>;
 
 // Array constructor (copy)
-template <typename T>
-NArray(copy_t, T*, size_t) -> NArray<T>;
+template <typename T, typename Deleter>
+NArray(T*, size_t, Deleter) -> NArray<T>;
 
 // Repeat constructor
 template <typename T>
