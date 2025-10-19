@@ -106,11 +106,6 @@ namespace numcpp {
     }
 
     template <typename T = double>
-    NArray<T> empty(std::initializer_list<T> list) {
-        return NArray<T>(Shape(list));
-    }
-
-    template <typename T = double>
     NArray<T> empty(const size_t size) {
         return NArray<T>(Shape(size));
     }
@@ -136,11 +131,6 @@ namespace numcpp {
     template <typename T = double>
     NArray<T> full(const size_t shape, T fill_value) {
         return NArray<T>(Shape{shape}, fill_value);
-    }
-
-    template <typename T = double>
-    NArray<T> full(const std::initializer_list<size_t> shape, T fill_value) {
-        return NArray<T>(Shape(shape), fill_value);
     }
 
 

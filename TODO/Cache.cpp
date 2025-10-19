@@ -1,3 +1,5 @@
+/* Yes, this code was mostly AI generated, yes it is only for testing purposes.*/
+
 #include <iostream>
 #include <unordered_map>
 #include <cmath>
