@@ -665,7 +665,7 @@ public:
 
 
     /* Index Overload */
-    NArray<dtype> operator[](const int& i) const {
+    NArray<dtype> operator[](const long long int& i) const {
         auto index = get_index(i);
 
         if (_shape.get_Ndim() == 1) {

@@ -69,4 +69,20 @@ inline NArray<int> randint(int low, int high, const Shape& shape) {
     return out;
 }
 
+    template <typename T>
+    NArray<T> shuffle(const NArray<T>& arr) {
+    const size_t len = arr.get_total_size();
+
+    NArray<T> out(arr);
+
+    for (size_t i = len - 1; i > 0; --i) {
+        auto dist = std::uniform_int_distribution<size_t>(0, i);
+        size_t j = dist(gen);
+
+        std::swap(out.get_data()[i], out.get_data()[j]);
+    }
+
+    return out;
+}
+
 } // namespace numcpp
