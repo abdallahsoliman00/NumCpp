@@ -4,12 +4,16 @@
 #include <type_traits>
 #include <complex>
 
-namespace numcpp {
+#include "Constants.hpp"
+
+namespace numcpp::comp {
 
 template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 class Complex {
 public:
     /* ====== Constructors ====== */
+
+    Complex() = default;
 
     Complex(T real, T imag) : _real(real), _imaginary(imag) {}
 
@@ -203,5 +207,26 @@ Complex<T> conj(const Complex<T>& num) {
 const Complex<double> i(0,1);
 const auto j = i;
 
+
+/* ====== Complex Number Type Checking ====== */
+
+template<typename T>
+struct is_complex : std::false_type {};
+
+template<typename T>
+struct is_complex<Complex<T>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_complex_v = is_complex<T>::value;
+
+
+template<typename T>
+struct is_complex_floating_point : std::false_type {};
+
+template<typename T>
+struct is_complex_floating_point<Complex<T>> : std::bool_constant<std::is_floating_point_v<T>> {};
+
+template<typename T>
+inline constexpr bool is_complex_floating_point_v = is_complex_floating_point<T>::value;
 
 } // namespace numcpp

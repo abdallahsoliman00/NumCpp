@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "Shape.hpp"
+#include "../Complex.hpp"
 #include "../Utils/VecOps.hpp"
 #include "../Utils/Errors.hpp"
 
@@ -203,11 +204,13 @@ protected:
     ) {
         os << '[';
         for(size_t i = 0; i < arr._shape[0]; i++) {
-        if constexpr (std::is_same_v<dtype, bool>) {
-            os << (arr.get_data()[i] ? " true" : " false");
-        } else {
-            os << util::num_to_str_from_attributes(arr.get_data()[i], attributes);
-        }
+            if constexpr (std::is_same_v<dtype, bool>) {
+                os << (arr.get_data()[i] ? " true" : " false");
+            } else if constexpr (std::is_arithmetic_v<dtype> || comp::is_complex_v<dtype>) {
+                os << util::num_to_str_from_attributes(arr.get_data()[i], attributes);
+            } else {
+                os << util::toString(arr.get_data()[i]);
+            }
             if(i < arr._shape[0] - 1) os << ' ';
         }
         os << ']';
@@ -754,7 +757,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
         // Fetch print attributes
         util::PrintAttributes attributes;
-        if(std::is_arithmetic_v<dtype>)
+        if constexpr (std::is_arithmetic_v<dtype> || comp::is_complex_v<dtype>)
             attributes = util::GetPrintAttributes(arr.get_data(), arr.get_total_size());
 
         switch(arr._shape.get_Ndim()) {

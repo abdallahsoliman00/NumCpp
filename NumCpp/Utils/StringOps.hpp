@@ -6,6 +6,7 @@
 #include <iomanip>
 
 #include "../MathOps.hpp"
+#include "../Complex.hpp"
 
 namespace numcpp::util {
 
@@ -14,13 +15,14 @@ will be used to format NArray printing */
 typedef struct PrintAttributes {
     bool is_scientific = false;
     int largest_exponent = 0;
+    bool is_complex = false;
     bool negative = false;
     int left_padding = 0;
     int right_padding = 0;
 } PrintAttributes;
 
 
-// Pads a number with eros to the left
+// Pads a number with zeros to the left
 inline std::string fill_with_zeros(const int number, const int length = 2) {
     std::string num = std::to_string(number);
     if (static_cast<int>(num.size()) < length)
@@ -40,10 +42,14 @@ std::string toString(const T& obj, const int float_precision = 0) {
     return oss.str();
 }
 
+// Removes all zeros at the end of a string
 inline void remove_trailing_zeros(std::string& num_str) {
     while (!num_str.empty() && num_str.back() == '0')
         num_str.pop_back();
 }
+
+
+/* Print attribute helpers */
 
 template <typename T>
 bool is_scientific(T num) {
@@ -51,7 +57,14 @@ bool is_scientific(T num) {
     return ((abs_num >= 1e6) || (abs_num <= 1e-5 && abs_num != 0)) && (!isinf(num));
 }
 
+template <typename T>
+bool is_scientific(const comp::Complex<T>& num) {
+    return (is_scientific(num.real()) || is_scientific(num.imag()));
+}
+
+
 // TODO: cache result for later use?
+// Counts the number of digits to the left of the decimal point
 template <typename T>
 int get_left_padding(T num) {
     if (num == 0) return 1;
@@ -66,7 +79,14 @@ int get_left_padding(T num) {
     }
 }
 
+template <typename T>
+int get_left_padding(const comp::Complex<T>& num) {
+    return get_left_padding(std::max(num.real(), num.imag()));
+}
+
+
 // TODO: cache result for later use?
+// Counts the number of digits to the right of the decimal point
 template <typename T>
 int get_right_padding(T num) {
     if constexpr (std::is_integral_v<T>)
@@ -86,6 +106,12 @@ int get_right_padding(T num) {
     return static_cast<int>(s.size() - dot - 1);
 }
 
+template <typename T>
+int get_right_padding(const comp::Complex<T>& num) {
+    return std::max(get_right_padding(num.real()), get_right_padding(num.imag()));
+}
+
+
 // TODO: cache result for later use?
 template <typename T>
 int get_exponent(T num) {
@@ -95,15 +121,30 @@ int get_exponent(T num) {
     return exponent;
 }
 
+template <typename T>
+int get_exponent(const comp::Complex<T>& num) {
+    return get_exponent(std::max(num.real(), num.imag()));
+}
+
+
+template <typename T>
+bool is_negative(T num) { return num < 0; }
+
+template <typename T>
+bool is_negative(comp::Complex<T> num) { return (num.real() < 0) || (num.imag() < 0); }
+
 
 template <typename dtype>
 PrintAttributes GetPrintAttributes(dtype* data_ptr, const size_t arrsize) {
     PrintAttributes attributes;
 
+    if constexpr (comp::is_complex_v<dtype>)
+        attributes.is_complex = true;
+
     for(int i = 0; i < arrsize; i++) {
 
         // Check if number is to be printed in scientific notation
-        if constexpr (std::is_floating_point_v<dtype>) {
+        if constexpr (std::is_floating_point_v<dtype> || comp::is_complex_floating_point_v<dtype>) {
             if (is_scientific(data_ptr[i]))
                 attributes.is_scientific = true;
         }
@@ -114,7 +155,7 @@ PrintAttributes GetPrintAttributes(dtype* data_ptr, const size_t arrsize) {
             attributes.largest_exponent = std::abs(_exp);
 
         // Check if negative
-        if(data_ptr[i] < 0)
+        if (is_negative(data_ptr[i]))
             attributes.negative = true;
 
         // Check if largest
@@ -123,12 +164,11 @@ PrintAttributes GetPrintAttributes(dtype* data_ptr, const size_t arrsize) {
             attributes.left_padding = lpad;
 
         // Check highest precision
-        if constexpr (std::is_floating_point_v<dtype>) {
+        if constexpr (std::is_floating_point_v<dtype> || comp::is_complex_floating_point_v<dtype>) {
             int rpad = get_right_padding(data_ptr[i]);
             if (rpad > attributes.right_padding)
                 attributes.right_padding = rpad;
         }
-
     }
     return attributes;
 }
@@ -194,5 +234,11 @@ std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes)
     return result;
 }
 
+template <typename T>
+std::string num_to_str_from_attributes(const comp::Complex<T>& num, const PrintAttributes& attributes) {
+    return "(" + num_to_str_from_attributes(num.real(), attributes) +
+        (num.imag() >= 0 ? " + " : " - ") +
+        num_to_str_from_attributes(std::abs(num.imag()), attributes) + "j)";
+}
 
 } // namespace numcpp::util
