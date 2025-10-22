@@ -17,6 +17,8 @@ public:
 
     Complex(T real, T imag) : _real(real), _imaginary(imag) {}
 
+    Complex(T num) : _real(num), _imaginary(0) {}
+
     explicit Complex(std::complex<T> num) : _real(num.real()), _imaginary(num.imag()) {}
 
     Complex(const Complex& num) : _real(num.real()), _imaginary(num.imag()) {}
@@ -52,6 +54,109 @@ public:
         os << number.real() << (number.imag() >= 0 ? " + " : " - ")
         << std::abs(number.imag()) << "j";
         return os;
+    }
+
+    /* ====== Comparison Overloads ====== */
+
+    // operator==
+    template <typename U>
+    bool operator==(const Complex<U>& other) const {
+        return (_real == other.real()) && (_imaginary == other.imag());
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    bool operator==(const U other) const {
+        return (_real == other) && (_imaginary == 0);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    friend bool operator==(const U scalar, const Complex& other) {
+        return (scalar == other.real()) && (0 == other.imag());
+    }
+
+
+    // operator!=
+    template <typename U>
+    bool operator!=(const Complex<U>& other) const {
+        return !(*this == other);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    bool operator!=(const U other) const {
+        return !(*this == other);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    friend bool operator!=(const U scalar, const Complex& other) {
+        return !(scalar == other);
+    }
+
+
+    // operator< (compares magnitudes)
+    template <typename U>
+    bool operator<(const Complex<U>& other) const {
+        return this->abs() < other.abs();
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    bool operator<(const U other) const {
+        return this->abs() < std::abs(other);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    friend bool operator<(const U scalar, const Complex& other) {
+        return std::abs(scalar) < other.abs();
+    }
+
+
+    // operator<= (compares magnitudes)
+    template <typename U>
+    bool operator<=(const Complex<U>& other) const {
+        return this->abs() <= other.abs();
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    bool operator<=(const U other) const {
+        return this->abs() <= std::abs(other);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    friend bool operator<=(const U scalar, const Complex& other) {
+        return std::abs(scalar) <= other.abs();
+    }
+
+
+    // operator> (compares magnitudes)
+    template <typename U>
+    bool operator>(const Complex<U>& other) const {
+        return this->abs() > other.abs();
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    bool operator>(const U other) const {
+        return this->abs() > std::abs(other);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    friend bool operator>(const U scalar, const Complex& other) {
+        return std::abs(scalar) > other.abs();
+    }
+
+
+    // operator>= (compares magnitudes)
+    template <typename U>
+    bool operator>=(const Complex<U>& other) const {
+        return this->abs() >= other.abs();
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    bool operator>=(const U other) const {
+        return this->abs() >= std::abs(other);
+    }
+
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    friend bool operator>=(const U scalar, const Complex& other) {
+        return std::abs(scalar) >= other.abs();
     }
 
     /* ====== Arithmetic Overloads ====== */
@@ -171,7 +276,6 @@ public:
         return Complex<R>((temp.real()*scalar)/denominator, (temp.imag()*scalar)/denominator);
     }
 
-
 private:
     T _real;
     T _imaginary;
@@ -229,4 +333,25 @@ struct is_complex_floating_point<Complex<T>> : std::bool_constant<std::is_floati
 template<typename T>
 inline constexpr bool is_complex_floating_point_v = is_complex_floating_point<T>::value;
 
-} // namespace numcpp
+
+template<typename T>
+struct is_complex_or_arithmetic : std::bool_constant<std::is_arithmetic_v<T> || is_complex_v<T>> {};
+
+template<typename T>
+inline constexpr bool is_complex_or_arithmetic_v = is_complex_or_arithmetic<T>::value;
+
+
+template <typename T>
+struct underlying_type {
+    using type = T;
+};
+
+template <typename T>
+struct underlying_type<Complex<T>> {
+    using type = T;
+};
+
+template <typename T>
+using underlying_type_t = typename underlying_type<T>::type;
+
+} // namespace numcpp::comp

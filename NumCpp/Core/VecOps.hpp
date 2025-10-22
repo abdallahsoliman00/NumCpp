@@ -92,7 +92,7 @@ auto vdot(const NArray<A>& a, const NArray<B>& b)
 }
 
 
-// Returns the elementwise multiplication of two arrays of any dimanesion
+// Returns the elementwise multiplication of two arrays of any dimension
 template <typename T, typename U>
 auto hadamard(const NArray<T>& larr, const NArray<U>& rarr)
     -> NArray<decltype(std::declval<T>() * std::declval<U>())>

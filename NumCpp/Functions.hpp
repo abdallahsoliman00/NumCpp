@@ -151,19 +151,23 @@ inline auto exp(T num) -> decltype(std::exp(num)) {
 }
 
 
-template <typename dtype, typename = std::enable_if_t<std::is_arithmetic_v<dtype>>>
-NArray<dtype> pow(const NArray<dtype>& arr, const int& exponent) {
-    NArray<dtype> out(arr.get_shape());
-    dtype* data = out.get_data();
-    for(int i = 0; i < arr.get_shape().get_total_size(); i++) {
-        data[i] = std::pow(data[i], exponent);
+template <typename dtype, typename T,
+    typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<dtype> && std::is_arithmetic_v<T>>>
+auto pow(const NArray<dtype>& arr, const T& exponent)
+    -> NArray<decltype(util::pow(std::declval<dtype>(), std::declval<T>()))>
+{
+    using R = decltype(util::pow(std::declval<dtype>(), std::declval<T>()));
+    NArray<R> out(arr.get_shape());
+
+    for(int i = 0; i < arr.get_total_size(); i++) {
+        out.get_data()[i] = util::pow(arr.get_data()[i], exponent);
     }
     return out;
 }
 
 template <typename T, typename U>
-inline auto pow(T base, U exponent) -> decltype(std::pow(base, exponent)) {
-    return std::pow(base, exponent);
+inline auto pow(T base, U exponent) -> decltype(util::pow(base, exponent)) {
+    return util::pow(base, exponent);
 }
 
 

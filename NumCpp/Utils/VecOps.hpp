@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "../Core/Shape.hpp"
-
+#include "../Complex.hpp"
 
 namespace numcpp::util {
 
@@ -99,6 +99,27 @@ std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
         vout[i/grp_size].push_back(vin[i]);
     }
     return vout;
+}
+
+
+// Complex number exponentiation
+template <typename T, typename U,
+    typename = std::enable_if_t<std::is_arithmetic_v<T> && std::is_arithmetic_v<U>>>
+auto pow(const comp::Complex<T>& num, U n)
+{
+    using R = decltype(std::pow(std::declval<T>(), std::declval<U>()));
+
+    auto r_to_n = std::pow(num.abs(), n);
+    auto theta = num.arg();
+
+    return comp::Complex<R>((r_to_n*std::cos(n*theta)),(r_to_n*std::sin(n*theta)));
+}
+
+// Regular exponentiation
+template <typename T, typename U,
+    typename = std::enable_if_t<std::is_arithmetic_v<T> && std::is_arithmetic_v<U>>>
+auto pow(T base, U exponent) -> decltype(std::pow(base, exponent)) {
+    return std::pow(base, exponent);
 }
 
 } // namespace numcpp::util
