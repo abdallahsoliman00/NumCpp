@@ -105,14 +105,14 @@ std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
 // Complex number exponentiation
 template <typename T, typename U,
     typename = std::enable_if_t<std::is_arithmetic_v<T> && std::is_arithmetic_v<U>>>
-auto pow(const comp::Complex<T>& num, U n)
+auto pow(const Complex<T>& num, U n)
 {
     using R = decltype(std::pow(std::declval<T>(), std::declval<U>()));
 
     auto r_to_n = std::pow(num.abs(), n);
     auto theta = num.arg();
 
-    return comp::Complex<R>((r_to_n*std::cos(n*theta)),(r_to_n*std::sin(n*theta)));
+    return Complex<R>((r_to_n*std::cos(n*theta)),(r_to_n*std::sin(n*theta)));
 }
 
 // Regular exponentiation

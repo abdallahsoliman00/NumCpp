@@ -152,7 +152,7 @@ inline auto exp(T num) -> decltype(std::exp(num)) {
 
 
 template <typename dtype, typename T,
-    typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<dtype> && std::is_arithmetic_v<T>>>
+    typename = std::enable_if_t<is_complex_or_arithmetic_v<dtype> && std::is_arithmetic_v<T>>>
 auto pow(const NArray<dtype>& arr, const T& exponent)
     -> NArray<decltype(util::pow(std::declval<dtype>(), std::declval<T>()))>
 {

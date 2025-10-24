@@ -4,9 +4,8 @@
 #include <type_traits>
 #include <complex>
 
-#include "Constants.hpp"
 
-namespace numcpp::comp {
+namespace numcpp {
 
 template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 class Complex {
@@ -38,9 +37,7 @@ public:
     }
 
     [[nodiscard]] double arg() const {
-        if (_imaginary == 0 && _real >= 0) return pi/2;
-        if (_imaginary == 0 && _real < 0) return -pi/2;
-        return atan(_real/static_cast<double>(_imaginary));
+        return std::atan2(_imaginary, _real);
     }
 
     [[nodiscard]] Complex conj() const {
@@ -308,8 +305,8 @@ Complex<T> conj(const Complex<T>& num) {
 
 /* ====== Constants ====== */
 
-const Complex<double> i(0,1);
-const auto j = i;
+const Complex<double> j(0,1);
+// const auto i = j;
 
 
 /* ====== Complex Number Type Checking ====== */
@@ -354,4 +351,4 @@ struct underlying_type<Complex<T>> {
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
-} // namespace numcpp::comp
+} // namespace numcpp
