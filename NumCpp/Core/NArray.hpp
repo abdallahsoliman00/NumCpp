@@ -565,7 +565,7 @@ public:
     // Right exponent overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     NArray operator^(T num) const {
-        return fullVecOpR(num, [] (dtype& b, T& e) { return util::pow(b,e); });
+        return fullVecOpR(num, [] (dtype& b, T& e) { return std::pow(b,e); });
     }
 
 
@@ -755,6 +755,10 @@ public:
 
     /* Print Overload */
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
+        // Check if the array is empty
+        if (arr._shape.get_Ndim() == 0) {
+            os << "[]"; return os;
+        }
         // Fetch print attributes
         util::PrintAttributes attributes;
         if constexpr (is_complex_or_arithmetic_v<dtype>)

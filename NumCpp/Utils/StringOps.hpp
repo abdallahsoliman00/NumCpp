@@ -58,7 +58,7 @@ bool is_scientific(T num) {
 }
 
 template <typename T>
-bool is_scientific(const Complex<T>& num) {
+bool is_scientific(const complex<T>& num) {
     return (is_scientific(num.real()) || is_scientific(num.imag()));
 }
 
@@ -80,7 +80,7 @@ int get_left_padding(T num) {
 }
 
 template <typename T>
-int get_left_padding(const Complex<T>& num) {
+int get_left_padding(const complex<T>& num) {
     return get_left_padding(std::max(num.real(), num.imag()));
 }
 
@@ -107,7 +107,7 @@ int get_right_padding(T num) {
 }
 
 template <typename T>
-int get_right_padding(const Complex<T>& num) {
+int get_right_padding(const complex<T>& num) {
     return std::max(get_right_padding(num.real()), get_right_padding(num.imag()));
 }
 
@@ -122,7 +122,7 @@ int get_exponent(T num) {
 }
 
 template <typename T>
-int get_exponent(const Complex<T>& num) {
+int get_exponent(const complex<T>& num) {
     return get_exponent(std::max(num.real(), num.imag()));
 }
 
@@ -131,7 +131,7 @@ template <typename T>
 bool is_negative(T num) { return num < 0; }
 
 template <typename T>
-bool is_negative(Complex<T> num) { return (num.real() < 0) || (num.imag() < 0); }
+bool is_negative(complex<T> num) { return (num.real() < 0) || (num.imag() < 0); }
 
 
 template <typename dtype>
@@ -235,7 +235,7 @@ std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes)
 }
 
 template <typename T>
-std::string num_to_str_from_attributes(const Complex<T>& num, const PrintAttributes& attributes) {
+std::string num_to_str_from_attributes(const complex<T>& num, const PrintAttributes& attributes) {
     return "(" + num_to_str_from_attributes(num.real(), attributes) +
         (num.imag() >= 0 ? " + " : " - ") +
         num_to_str_from_attributes(std::abs(num.imag()), attributes) + "j)";
