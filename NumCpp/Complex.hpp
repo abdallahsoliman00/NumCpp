@@ -4,7 +4,6 @@
 #include <type_traits>
 #include <complex>
 
-#include "Constants.hpp"
 
 namespace numcpp {
 
@@ -36,9 +35,7 @@ public:
     }
 
     [[nodiscard]] double arg() const {
-        if (_imaginary == 0 && _real >= 0) return pi/2;
-        if (_imaginary == 0 && _real < 0) return -pi/2;
-        return atan(_real/static_cast<double>(_imaginary));
+        return std::atan2(_imaginary, _real);
     }
 
     [[nodiscard]] complex conj() const {
@@ -311,7 +308,7 @@ complex<T> polar(const T& rho, const T& theta) {
 
 /* ====== Constants ====== */
 
-const complex<double> j(0,1);
+const Complex<double> j(0,1);
 // const auto i = j;
 
 
@@ -357,4 +354,4 @@ struct underlying_type<complex<T>> {
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
-} // namespace numcpp::comp
+} // namespace numcpp
