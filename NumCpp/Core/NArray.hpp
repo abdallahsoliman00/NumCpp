@@ -206,7 +206,7 @@ protected:
         for(size_t i = 0; i < arr._shape[0]; i++) {
             if constexpr (std::is_same_v<dtype, bool>) {
                 os << (arr.get_data()[i] ? " true" : " false");
-            } else if constexpr (comp::is_complex_or_arithmetic_v<dtype>) {
+            } else if constexpr (is_complex_or_arithmetic_v<dtype>) {
                 os << util::num_to_str_from_attributes(arr.get_data()[i], attributes);
             } else {
                 os << util::toString(arr.get_data()[i]);
@@ -521,7 +521,7 @@ public:
     /* ====== Operator Overloading ====== */
 
     // Array addition
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator+(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "add");
@@ -531,7 +531,7 @@ public:
 
 
     // Array subtraction
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator-(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "subtract");
@@ -541,7 +541,7 @@ public:
 
 
     // Array multiplication
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator*(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "multiply");
@@ -551,7 +551,7 @@ public:
 
 
     // Array division
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator/(const NArray<T>& other) const {
         if(!same_shape(*this, other))
             throw error::ShapeError(this->_shape, other._shape, "divide");
@@ -563,35 +563,35 @@ public:
     /* Scalar Overloads */
 
     // Right exponent overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     NArray operator^(T num) const {
-        return fullVecOpR(num, [] (dtype& b, T& e) { return util::pow(b,e); });
+        return fullVecOpR(num, [] (dtype& b, T& e) { return std::pow(b,e); });
     }
 
 
     // Right addition overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     NArray operator+(T num) const {
         return fullVecOpR(num, [] (dtype& a, T& b) { return a + b; });
     }
 
 
     // Right subtraction overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     NArray operator-(T num) const {
         return fullVecOpR(num, [] (dtype& a, T& b) { return a + b; });
     }
 
 
     // Right multiplication overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     NArray operator*(T num) const {
         return fullVecOpR(num, [] (dtype& a, T& b) { return a * b; });
     }
 
 
     // Right division overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     NArray operator/(T num) const {
         return fullVecOpR(num, [] (dtype& a, T& b) { return a / b; });
     }
@@ -606,28 +606,28 @@ public:
 
 
     // Left addition overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     friend NArray operator+(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (T& a, dtype& b) { return a + b; });
     }
 
 
     // Left subtraction overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     friend NArray operator-(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (T& a, dtype& b) { return a - b; });
     }
 
 
     // Left multiplication overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     friend NArray operator*(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (T& a, dtype& b) { return a * b; });
     }
 
 
     // Left division overload
-    template <typename T, typename = std::enable_if_t<comp::is_complex_or_arithmetic_v<T>>>
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     friend NArray operator/(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (T& a, dtype& b) { return a / b; });
     }
@@ -755,9 +755,13 @@ public:
 
     /* Print Overload */
     friend std::ostream& operator<<(std::ostream& os, const NArray& arr) {
+        // Check if the array is empty
+        if (arr._shape.get_Ndim() == 0) {
+            os << "[]"; return os;
+        }
         // Fetch print attributes
         util::PrintAttributes attributes;
-        if constexpr (comp::is_complex_or_arithmetic_v<dtype>)
+        if constexpr (is_complex_or_arithmetic_v<dtype>)
             attributes = util::GetPrintAttributes(arr.get_data(), arr.get_total_size());
 
         switch(arr._shape.get_Ndim()) {
@@ -846,11 +850,11 @@ public:
 
     // Returns the real components of a complex vector
     [[nodiscard]] auto real() const
-        -> NArray<comp::underlying_type_t<dtype>>
+        -> NArray<underlying_type_t<dtype>>
     {
-        using R = comp::underlying_type_t<dtype>;
+        using R = underlying_type_t<dtype>;
 
-        if constexpr (comp::is_complex_v<dtype>) {
+        if constexpr (is_complex_v<dtype>) {
             NArray<R> out(_shape);
             for (size_t i = 0; i < get_total_size(); i++) {
                 out.get_data()[i] = get_data()[i].real();
@@ -863,11 +867,11 @@ public:
 
     // Returns the imaginary components of a complex vector
     [[nodiscard]] auto imag() const
-        -> NArray<comp::underlying_type_t<dtype>>
+        -> NArray<underlying_type_t<dtype>>
     {
-        using R = comp::underlying_type_t<dtype>;
+        using R = underlying_type_t<dtype>;
 
-        if constexpr (comp::is_complex_v<dtype>) {
+        if constexpr (is_complex_v<dtype>) {
             NArray<R> out(_shape);
             for (size_t i = 0; i < get_total_size(); i++) {
                 out.get_data()[i] = get_data()[i].imag();
