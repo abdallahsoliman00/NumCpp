@@ -36,27 +36,27 @@ auto dot(const NArray<A>& a, const NArray<B>& b)
     using U = decltype(std::declval<A>() * std::declval<B>());
 
     MatmulType type = Shape::get_matmul_type(a.get_shape(), b.get_shape());
-    
+
     switch(type) {
         case MatmulType::Invalid:
             throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
-            break;
+
         case MatmulType::Dot: {
             U sum = 0;
             for(size_t i = 0; i < a.get_total_size(); i++)
                 sum += (a.get_data()[i] * b.get_data()[i]);
             return NArray<U>(sum);
-            break;
         }
+
         case MatmulType::MatCol:
             return matmul(a,b);
-            break;
+
         case MatmulType::RowMat:
             return matmul(a,b);
-            break;
+
         case MatmulType::MatMat:
             return matmul(a,b);
-            break;
+
         default:
         throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
         break;
@@ -76,19 +76,19 @@ auto dot(A a, B b) { return a * b; }
 
 // Flattens the input NArrays and returns the dot-product
 template <typename A, typename B>
-auto vdot(const NArray<A>& a, const NArray<B>& b) 
+auto vdot(const NArray<A>& a, const NArray<B>& b)
     -> NArray<decltype(std::declval<A>() * std::declval<B>())>
 {
     using U = decltype(std::declval<A>() * std::declval<B>());
 
-    if(!a.same_shape(b))
-        throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
+    if(!NArray<>::same_shape(a,b))
+        throw error::ShapeError(a.get_shape(), b.get_shape(), "vdot");
 
     U sum = 0;
     for(size_t i = 0; i < a.get_total_size(); i++)
-        sum += (a.get_data()[i] * b.get_data()[i]);
+        sum += (conj(a.get_data()[i]) * b.get_data()[i]);
 
-    return sum;
+    return NArray<U>(sum);
 }
 
 

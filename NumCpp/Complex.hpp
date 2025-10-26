@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <complex>
 
+#include "Constants.hpp"
+
 
 namespace numcpp {
 
@@ -39,7 +41,7 @@ public:
     }
 
     [[nodiscard]] complex conj() const {
-        return Complex(_real, -_imaginary);
+        return complex(_real, -_imaginary);
     }
 
 
@@ -271,6 +273,64 @@ public:
         return complex<R>((temp.real()*scalar)/denominator, (temp.imag()*scalar)/denominator);
     }
 
+
+    // operator +=
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    complex& operator+=(const U& other) {
+        _real += other;
+        return *this;
+    }
+
+    template <typename U>
+    complex& operator+=(const complex<U>& other) {
+        _real += other.real();
+        _imaginary += other.imag();
+        return *this;
+    }
+
+    // operator -=
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    complex& operator-=(const U& other) {
+        _real -= other;
+        return *this;
+    }
+
+    template <typename U>
+    complex& operator-=(const complex<U>& other) {
+        _real -= other.real();
+        _imaginary -= other.imag();
+        return *this;
+    }
+
+    // operator *=
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    complex& operator*=(const U& other) {
+        _real *= other;
+        _imaginary *= other;
+        return *this;
+    }
+
+    template <typename U>
+    complex& operator*=(const complex<U>& other) {
+        *this = this->operator*(other);
+        return *this;
+    }
+
+    // operator /=
+    template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    complex& operator/=(const U& other) {
+        _real /= other;
+        _imaginary /= other;
+        return *this;
+    }
+
+    template <typename U>
+    complex& operator/=(const complex<U>& other) {
+        *this = this->operator/(other);
+        return *this;
+    }
+
+
 private:
     T _real;
     T _imaginary;
@@ -296,6 +356,11 @@ double arg(const complex<T>& num) {
 }
 
 template <typename T>
+double angle(const complex<T>& num) {
+    return num.arg();
+}
+
+template <typename T>
 complex<T> conj(const complex<T>& num) {
     return num.conj();
 }
@@ -304,6 +369,31 @@ template <typename T>
 complex<T> polar(const T& rho, const T& theta) {
     return complex<T>(rho*std::cos(theta), rho*std::sin(theta));
 }
+
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+T real(const T& num)
+    { return num; }
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+T imag(const T&)
+    { return T(); }
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+double abs(const T& num)
+    { return num >= 0 ? num : -num ; }
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+double arg(const T& num)
+    { return num >= 0 ? 0 : pi ; }
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+double angle(const T& num)
+    { return num >= 0 ? 0 : pi ; }
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+T conj(const T& num)
+    { return num; }
 
 
 /* ====== Constants ====== */

@@ -50,8 +50,9 @@ public:
 
 
     // Checks if two shapes are the same
-    static bool same_shape(const NArray& a, const NArray& b) {
-        return a._shape.same_shape(b._shape);
+    template <typename T, typename U>
+    static bool same_shape(const NArray<T>& a, const NArray<U>& b) {
+        return a.get_shape().same_shape(b.get_shape());
     }
 
 
@@ -565,71 +566,71 @@ public:
 
     // Right exponent overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    NArray operator^(T num) const {
+    auto operator^(T num) const {
         return fullVecOpR(num, [] (const dtype& b, const T& e) { return util::pow(b,e); });
     }
 
 
     // Right addition overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    NArray operator+(T num) const {
+    auto operator+(T num) const {
         return fullVecOpR(num, [] (const dtype& a, const T& b) { return a + b; });
     }
 
 
     // Right subtraction overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    NArray operator-(T num) const {
+    auto operator-(T num) const {
         return fullVecOpR(num, [] (const dtype& a, const T& b) { return a + b; });
     }
 
 
     // Right multiplication overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    NArray operator*(T num) const {
+    auto operator*(T num) const {
         return fullVecOpR(num, [] (const dtype& a, const T& b) { return a * b; });
     }
 
 
     // Right division overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    NArray operator/(T num) const {
+    auto operator/(T num) const {
         return fullVecOpR(num, [] (const dtype& a, const T& b) { return a / b; });
     }
 
 
 
     // Left base overload
-    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-    friend NArray operator^(T num, const NArray& arr) {
+    template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
+    friend auto operator^(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (const T& b, const dtype& e) { return util::pow(b,e); });
     }
 
 
     // Left addition overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    friend NArray operator+(T num, const NArray& arr) {
+    friend auto operator+(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (const T& a, const dtype& b) { return a + b; });
     }
 
 
     // Left subtraction overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    friend NArray operator-(T num, const NArray& arr) {
+    friend auto operator-(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (const T& a, const dtype& b) { return a - b; });
     }
 
 
     // Left multiplication overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    friend NArray operator*(T num, const NArray& arr) {
+    friend auto operator*(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (const T& a, const dtype& b) { return a * b; });
     }
 
 
     // Left division overload
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
-    friend NArray operator/(T num, const NArray& arr) {
+    friend auto operator/(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (const T& a, const dtype& b) { return a / b; });
     }
 
