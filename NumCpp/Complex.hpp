@@ -308,7 +308,7 @@ complex<T> polar(const T& rho, const T& theta) {
 
 /* ====== Constants ====== */
 
-const Complex<double> j(0,1);
+const complex<double> j(0,1);
 // const auto i = j;
 
 

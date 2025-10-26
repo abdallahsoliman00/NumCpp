@@ -138,10 +138,14 @@ template <typename dtype>
 PrintAttributes GetPrintAttributes(dtype* data_ptr, const size_t arrsize) {
     PrintAttributes attributes;
 
-    if constexpr (is_complex_v<dtype>)
-        attributes.is_complex = true;
-
     for(int i = 0; i < arrsize; i++) {
+
+        // Check if should be printed as a complex number
+        if constexpr (is_complex_v<dtype>) {
+            if (data_ptr[i].imag()) {
+                attributes.is_complex = true;
+            }
+        }
 
         // Check if number is to be printed in scientific notation
         if constexpr (std::is_floating_point_v<dtype> || is_complex_floating_point_v<dtype>) {
@@ -236,9 +240,12 @@ std::string num_to_str_from_attributes(T num, const PrintAttributes& attributes)
 
 template <typename T>
 std::string num_to_str_from_attributes(const complex<T>& num, const PrintAttributes& attributes) {
-    return "(" + num_to_str_from_attributes(num.real(), attributes) +
+    if (attributes.is_complex) {
+        return "(" + num_to_str_from_attributes(num.real(), attributes) +
         (num.imag() >= 0 ? " + " : " - ") +
         num_to_str_from_attributes(std::abs(num.imag()), attributes) + "j)";
+    }
+    return num_to_str_from_attributes(num.real(), attributes);
 }
 
 } // namespace numcpp::util
