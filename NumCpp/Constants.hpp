@@ -2,11 +2,12 @@
 #pragma once
 
 #include <limits>
+#include <cmath>
 
 namespace numcpp {
     
-    constexpr double pi = 3.141592653589793;
-    constexpr double e = 2.718281828459045;
+    constexpr double pi = M_PI;
+    constexpr double e = M_E;
 
     template <typename T = float>
     constexpr T inf_t = std::numeric_limits<T>::infinity();

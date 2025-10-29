@@ -124,14 +124,26 @@ protected:
     }
 
 
-    // Enables Python-like indexing with negative indexes wrapping around
-    [[nodiscard]] size_t get_index(const int& index) const {
+    // Enables Python-like indexing with negative indexes wrapping around (for viewing/slicing)
+    [[nodiscard]] size_t get_index(const long long int& index) const {
         auto size = static_cast<long long int>(_shape[0]);
 
         if((index >= 0) && (index < size))
             return static_cast<size_t>(index);
         else if((index < 0) && (index >= -size))
             return static_cast<size_t>(index + size);
+        else
+            throw std::runtime_error("Index out of range.");
+    }
+
+    // Enables Python-like indexing with negative indexes wrapping around (for accessing elements)
+    [[nodiscard]] size_t get_element_index(const long long int& index) const {
+        auto const size = get_total_size();
+
+        if((index >= 0) && (index < size))
+            return static_cast<size_t>(index);
+        else if((index < 0) && (index >= -size))
+            return (index + size);
         else
             throw std::runtime_error("Index out of range.");
     }
@@ -288,7 +300,7 @@ public:
         std::copy(data.begin(), data.end(), _data_ptr.get());
     }
 
-    explicit NArray(std::vector<dtype>&& data) :
+    NArray(std::vector<dtype>&& data) :
         _data_ptr(new dtype[data.size()], std::default_delete<dtype[]>()),
         _shape({data.size()})
     {
@@ -670,6 +682,7 @@ public:
 
 
     /* Index Overload */
+    // For slicing / viewing
     NArray<dtype> operator[](const long long int& i) const {
         auto index = get_index(i);
 
@@ -680,6 +693,21 @@ public:
             auto new_shape = Shape(_shape.dimensions.begin() + 1, _shape.dimensions.end());
             return NArray<dtype>(_data_ptr, slice_start, std::move(new_shape));
         }
+    }
+
+    // For direct access to the elements
+    dtype& operator()(const long long int& i) const {
+        return _data_ptr.get()[get_element_index(i)];
+    }
+
+    /* if left empty, returns the first element of the NArray
+     * can be used with the [] overload as such:
+     * auto arr = NArray({{1,2},{3,4}});
+     * to access the element containing 2, do the following:
+     * auto elem& = arr[0]();
+     */
+    dtype& operator()() {
+        return *_data_ptr.get();
     }
 
 

@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <complex>
+#include <mutex>
 
 #include "Constants.hpp"
 
@@ -14,13 +15,20 @@ class complex {
 public:
     /* ====== Constructors ====== */
 
+    // Default constructor
     complex() : _real(0), _imaginary(0) {}
 
+    // Normal constructor
     complex(const T& real, const T& imag = 0) : _real(real), _imaginary(imag) {}
 
+    // Constructor form std::complex
     explicit complex(const std::complex<T> num) : _real(num.real()), _imaginary(num.imag()) {}
 
+    // Copy constructor
     complex(const complex& num) : _real(num.real()), _imaginary(num.imag()) {}
+
+    // Move constructor
+    complex(complex&& num) noexcept : _real(std::move(num._real)), _imaginary(std::move(num._imaginary)) {}
 
 
     /* ====== Helpers ====== */
@@ -52,6 +60,10 @@ public:
         << std::abs(number.imag()) << "j";
         return os;
     }
+
+    // Assignment operator
+    complex& operator=(const complex&) = default;
+    complex& operator=(complex&&) noexcept = default;
 
     /* ====== Comparison Overloads ====== */
 
@@ -367,6 +379,7 @@ complex<T> conj(const complex<T>& num) {
 
 template <typename T>
 complex<T> polar(const T& rho, const T& theta) {
+    if (!rho) return complex<T>(0,0);
     return complex<T>(rho*std::cos(theta), rho*std::sin(theta));
 }
 
