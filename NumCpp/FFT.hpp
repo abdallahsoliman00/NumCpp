@@ -31,6 +31,7 @@ namespace numcpp::fft {
         return dft_out;
     }
 
+
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<complex<T>> idft(const NArray<complex<T>>& X_k) {
         const size_t N_samples = X_k.get_total_size();
@@ -46,7 +47,6 @@ namespace numcpp::fft {
         }
         return x_n;
     }
-
 
 
     inline NArray<double> fftfreq(const size_t& n_samples, const float& diff = 1.0f) {

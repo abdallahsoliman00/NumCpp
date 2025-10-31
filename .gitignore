@@ -3,3 +3,4 @@ test.*
 *.exe
 .idea/
 cmake-build-debug/
+testfile.txt

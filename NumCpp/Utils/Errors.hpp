@@ -38,6 +38,15 @@ public:
     }
 };
 
+class ArgumentError final : public std::runtime_error {
+public:
+    explicit ArgumentError(std::string&& message)
+        : std::runtime_error("[ArgumentError]: " + std::move(message))
+    {
+        std::cerr << runtime_error::what() << std::endl;
+    }
+};
+
 
 class ConversionError final : public std::domain_error {
 public:
