@@ -95,7 +95,7 @@ int get_right_padding(T num) {
     std::string s = toString(std::abs(num));
 
     // Find the decimal point
-    const std::size_t dot = s.find('.');
+    const size_t dot = s.find('.');
     if (dot == std::string::npos)
         return 0;
 

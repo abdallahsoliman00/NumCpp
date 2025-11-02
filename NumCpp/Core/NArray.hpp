@@ -65,13 +65,6 @@ public:
 protected:
     /* ====== Helper Functions ====== */
 
-    // begin iterator over the NArray's data
-    dtype* begin() { return _data_ptr.get(); }
-
-    // end iterator over the NArray's data
-    dtype* end() { return _data_ptr.get() + _shape.get_total_size(); }
-
-
     // Gets the total size required to store multiple NArrays
     static void get_size_requirements(
         size_t& size, int& depth, const NArray& arr
@@ -300,6 +293,7 @@ public:
         std::copy(data.begin(), data.end(), _data_ptr.get());
     }
 
+    // Removed made the constructor implicit to allow NArray functions to work with std::vector as well
     NArray(std::vector<dtype>&& data) :
         _data_ptr(new dtype[data.size()], std::default_delete<dtype[]>()),
         _shape({data.size()})
@@ -474,11 +468,11 @@ public:
 
 
     // Constructor from shared_ptr (used for slicing)
-    NArray(std::shared_ptr<dtype> base, dtype* slice_start, Shape&& new_shape)
-        : _data_ptr(base, slice_start), _shape(std::move(new_shape)) {}
+    NArray(std::shared_ptr<dtype> base, dtype* slice_start, Shape&& new_shape) :
+        _data_ptr(base, slice_start), _shape(std::move(new_shape)) {}
 
-    NArray(std::shared_ptr<dtype> base, dtype* slice_start, const Shape& new_shape)
-        : _data_ptr(base, slice_start), _shape(new_shape) {}
+    NArray(std::shared_ptr<dtype> base, dtype* slice_start, const Shape& new_shape) :
+        _data_ptr(base, slice_start), _shape(new_shape) {}
 
 
     // Shared pointer + shape constructor
@@ -911,6 +905,18 @@ public:
             return NArray<R>(_shape, 0);
         }
     }
+
+    // Returns the length of the NArray (the last element of _shape)
+    [[nodiscard]] size_t length() const { return _shape[-1]; }
+    [[nodiscard]] size_t len() const { return _shape[-1]; }
+
+    // begin iterator over the NArray's data
+    dtype* begin() { return _data_ptr.get(); }
+    [[nodiscard]] const dtype* begin() const {return _data_ptr.get(); }
+
+    // end iterator over the NArray's data
+    dtype* end() { return _data_ptr.get() + _shape.get_total_size(); }
+    [[nodiscard]] const dtype* end() const { return _data_ptr.get() + _shape.get_total_size(); }
 
 };
 

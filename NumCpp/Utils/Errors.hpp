@@ -18,33 +18,22 @@ public:
     ShapeError(const Shape& lshape, const Shape& rshape, const std::string& operation)
         : std::runtime_error("[ShapeError]: Unable to " + operation + " Vectors. Cannot "
                             + operation +" shapes " + util::toString(lshape) + " and "
-                            + util::toString(rshape) + ".")
-    {
-        std::cerr << runtime_error::what() << std::endl;
-    }
+                            + util::toString(rshape) + ".") {}
+
     explicit ShapeError(std::string&& message)
-        : std::runtime_error("[ShapeError]: " + std::move(message))
-    {
-        std::cerr << runtime_error::what() << std::endl;
-    }
+        : std::runtime_error("[ShapeError]: " + std::move(message)) {}
 };
 
 class ValueError final : public std::runtime_error {
 public:
     explicit ValueError(std::string&& message)
-        : std::runtime_error("[ValueError]: " + std::move(message))
-    {
-        std::cerr << runtime_error::what() << std::endl;
-    }
+        : std::runtime_error("[ValueError]: " + std::move(message)) {}
 };
 
 class ArgumentError final : public std::runtime_error {
 public:
     explicit ArgumentError(std::string&& message)
-        : std::runtime_error("[ArgumentError]: " + std::move(message))
-    {
-        std::cerr << runtime_error::what() << std::endl;
-    }
+        : std::runtime_error("[ArgumentError]: " + std::move(message)) {}
 };
 
 
@@ -54,10 +43,7 @@ public:
         : std::domain_error(
             "[ConversionError]: Unable to convert array of shape " +
             util::toString(shape) + " to " + std::move(type) + "."
-        )
-    {
-        std::cerr << logic_error::what() << std::endl;
-    }
+        ) {}
 };
 
 } // namespace error

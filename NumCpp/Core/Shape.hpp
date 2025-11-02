@@ -169,7 +169,7 @@ struct Shape {
     }
 
     // Index operator
-    const size_t& operator[](const int index) const {
+    const size_t& operator[](const long long index) const {
         return dimensions[get_index(index)];
     }
 
@@ -187,7 +187,7 @@ struct Shape {
 private:
 
     // Enables Python-like indexing with negative indexes wrapping around
-    [[nodiscard]] size_t get_index(const int index) const {
+    [[nodiscard]] size_t get_index(const long long index) const {
         const size_t size = dimensions.size();
 
         if((index >= 0) && (index < size))
