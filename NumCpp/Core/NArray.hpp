@@ -123,10 +123,10 @@ protected:
 
         if((index >= 0) && (index < size))
             return static_cast<size_t>(index);
-        else if((index < 0) && (index >= -size))
+        if((index < 0) && (index >= -size))
             return static_cast<size_t>(index + size);
-        else
-            throw std::runtime_error("Index out of range.");
+
+        throw std::runtime_error("Array index out of range.");
     }
 
     // Enables Python-like indexing with negative indexes wrapping around (for accessing elements)
@@ -135,10 +135,10 @@ protected:
 
         if((index >= 0) && (index < size))
             return static_cast<size_t>(index);
-        else if((index < 0) && (index >= -size))
+        if((index < 0) && (index >= -size))
             return (index + size);
-        else
-            throw std::runtime_error("Index out of range.");
+
+        throw std::runtime_error("Element index out of range.");
     }
 
 

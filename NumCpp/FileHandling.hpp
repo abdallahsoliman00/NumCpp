@@ -204,7 +204,8 @@ namespace numcpp {
     // Saves an NArray by spacing elements using a delimiter. Can only save NArrays with up to two dimensions.
     template <typename T>
     void save_to_file(const char* filepath, const NArray<T>& arr, const char delimiter = ' ') {
-        if (arr.get_shape().get_Ndim() > 2) {
+        const size_t dims = arr.get_shape().get_Ndim();
+        if (dims > 2) {
             throw error::ShapeError(
                 "Cannot write an array of shape " + util::toString(arr.get_shape()) +
                 " to a file, NArray must have at most 2 dimensions."
@@ -213,23 +214,30 @@ namespace numcpp {
         }
         std::ofstream file(filepath);
 
-        for (size_t i = 0; i < arr.len(); i++) {
-            for (size_t k = 0; k < arr.get_shape()[0]; k++) {
-                file << arr[i](k);
-                if (k < arr.get_shape()[0] - 1) file << delimiter;
+        if (dims == 2) {
+            for (size_t i = 0; i < arr.len(); i++) {
+                for (size_t k = 0; k < arr.get_shape()[0]; k++) {
+                    file << arr[i](k);
+                    if (k < arr.get_shape()[0] - 1) file << delimiter;
+                }
+                file << '\n';
             }
-            file << '\n';
+        } else {
+            for (size_t i = 0, len = arr.len(); i < len; i++) {
+                file << arr(i);
+                if (i < len - 1) file << delimiter;
+            }
         }
     }
 
     template <typename T>
     void savetxt(const char* filepath, const NArray<T>& arr, const char delimiter = ' ') {
-        save_to_file(arr, filepath, delimiter);
+        save_to_file(filepath, arr, delimiter);
     }
 
     template <typename T>
     void savecsv(const char* filepath, const NArray<T>& arr, const char delimiter = ',') {
-        save_to_file(arr, filepath, delimiter);
+        save_to_file(filepath, arr, delimiter);
     }
 
 } // namespace numcpp
