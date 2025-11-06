@@ -15,7 +15,7 @@ A C++ header-only library inspired by NumPy.
 This library was made completely in vanilla C++, so using it should be simple.
 - Simply clone this repository:
 ```shell
-git clone https://github.com/abdallahsoliman00/NumCpp.git
+git clone https://github.com/abdallahsoliman00/NumXX.git
 ```
 - Add the folder [NumXX](NumXX) to your include path.
 - Add the following line to the top of your C++ file:
