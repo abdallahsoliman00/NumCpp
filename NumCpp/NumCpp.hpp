@@ -9,3 +9,4 @@
 #include "Random.hpp"
 #include "FFT.hpp"
 #include "FileHandling.hpp"
+#include "Linalg.hpp"

@@ -78,6 +78,15 @@ struct Shape {
     }
 
 
+    // Checks if a shape is a square
+    [[nodiscard]] bool is_square() const {
+        if (get_Ndim() > 2) return false;
+        if (get_Ndim() == 2 && dimensions[0] == dimensions[1]) return true;
+        if (get_total_size() == 1) return true;
+        return false;
+    }
+
+
     /* ====== Main Functions ====== */
 
     // Changes the shape

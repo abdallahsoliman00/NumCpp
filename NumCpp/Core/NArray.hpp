@@ -244,7 +244,7 @@ protected:
         os << '[';
         for (size_t i = 0; i < n_grps; i++) {
             if (i > 0) {
-                os << ",";
+                os << " ";
                 if (depth == 0)
                     os << "\n\n";
                 else
@@ -677,16 +677,26 @@ public:
 
     /* Index Overload */
     // For slicing / viewing
-    NArray<dtype> operator[](const long long int& i) const {
+    NArray operator[](const long long int& i) const {
         auto index = get_index(i);
 
-        if (_shape.get_Ndim() == 1) {
-            return NArray<dtype>(_data_ptr, _data_ptr.get() + index, Shape(1));
-        } else {
-            auto slice_start = _data_ptr.get() + _shape[1] * index;
-            auto new_shape = Shape(_shape.dimensions.begin() + 1, _shape.dimensions.end());
-            return NArray<dtype>(_data_ptr, slice_start, std::move(new_shape));
-        }
+        if (_shape.get_Ndim() == 1)
+            return NArray(_data_ptr, _data_ptr.get() + index, Shape(1));
+
+        auto slice_start = _data_ptr.get() + _shape[1] * index;
+        auto new_shape = Shape(_shape.dimensions.begin() + 1, _shape.dimensions.end());
+        return NArray(_data_ptr, slice_start, std::move(new_shape));
+    }
+
+    NArray operator[](const long long int& i) {
+        auto index = get_index(i);
+
+        if (_shape.get_Ndim() == 1)
+            return NArray(_data_ptr, _data_ptr.get() + index, Shape(1));
+
+        auto slice_start = _data_ptr.get() + _shape[1] * index;
+        auto new_shape = Shape(_shape.dimensions.begin() + 1, _shape.dimensions.end());
+        return NArray(_data_ptr, slice_start, std::move(new_shape));
     }
 
     // For direct access to the elements
