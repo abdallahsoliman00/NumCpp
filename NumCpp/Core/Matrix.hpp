@@ -2,7 +2,7 @@
 #pragma once
 
 #include "NArray.hpp"
-#include "Shape.hpp"
+
 
 namespace numcpp {
 

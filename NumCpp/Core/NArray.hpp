@@ -226,21 +226,21 @@ protected:
 
     // Recursively prints the N-Dimensional arrays (> 2D arrays)
     static void recursivePrint(
-        std::ostream& os, std::vector<dtype> data, const Shape& shape,
+    std::ostream& os, std::vector<dtype>&& data, const Shape& shape,
         const util::PrintAttributes& attributes, const int depth = 0
     ) {
         // Base case
         if(shape.get_Ndim() == 1) {
-            OneDPrint(os, NArray(data), attributes);
+            OneDPrint(os, NArray(std::move(data)), attributes);
             return;
         }
 
-        // Take the first element and split 
+        // Take the first element and split
         size_t n_grps = shape[0];
-        auto groups = util::split(data, n_grps);
+        auto groups = util::split(std::move(data), n_grps);
 
         const Shape subshape(shape.dimensions.begin() + 1, shape.dimensions.end());
-        
+
         os << '[';
         for (size_t i = 0; i < n_grps; i++) {
             if (i > 0) {
@@ -250,7 +250,7 @@ protected:
                 else
                     os << "\n" << std::string(depth + 1, ' ');
             }
-            recursivePrint(os, groups[i], subshape, attributes, depth + 1);
+            recursivePrint(os, std::move(groups[i]), subshape, attributes, depth + 1);
         }
         os << ']';
     }
@@ -476,7 +476,7 @@ public:
 
 
     // Shared pointer + shape constructor
-    NArray(std::shared_ptr<dtype> sp, Shape shape) : _data_ptr(sp), _shape(std::move(shape)) {}
+    NArray(const std::shared_ptr<dtype>& sp, const Shape& shape) : _data_ptr(sp), _shape(shape) {}
     NArray(const std::shared_ptr<dtype>& sp, Shape&& shape) : _data_ptr(sp), _shape(std::move(shape)) {}
 
 
@@ -858,11 +858,17 @@ public:
 
 
     // Returns a new flat vector
-    [[nodiscard]] NArray flatten() const { return NArray(get_data_copy_as_shared_ptr(), _shape.flatten()); }
+    [[nodiscard]] NArray flatten() const {
+        if (_shape.get_Ndim() == 1) return NArray(*this);
+        return NArray(get_data_copy_as_shared_ptr(), _shape.flatten());
+    }
 
 
     // Returns a flat view of the array
-    NArray ravel() { return NArray(_data_ptr, _shape.flatten()); }
+    NArray ravel() {
+        if (_shape.get_Ndim() == 1) return *this;
+        return NArray(_data_ptr, _shape.flatten());
+    }
 
 
     // Returns a deep copy of the NArray

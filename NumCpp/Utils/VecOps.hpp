@@ -90,12 +90,12 @@ void transpose(dtype* arr, dtype* data_in, const Shape& shape) {
 // Splits a vector vin into n_groups
 // Warning: DO NOT use if vector.size() % n_groups != 0
 template <typename T>
-std::vector<std::vector<T>> split(std::vector<T> vin, const size_t& n_groups) {
+std::vector<std::vector<T>> split(std::vector<T>&& vin, const size_t& n_groups) {
     const size_t grp_size = vin.size()/n_groups;
     std::vector<std::vector<T>> vout(n_groups);
 
     for(size_t i = 0; i < vin.size(); i++) {
-        vout[i/grp_size].push_back(vin[i]);
+        vout[i/grp_size].push_back(std::move(vin[i]));
     }
     return vout;
 }
