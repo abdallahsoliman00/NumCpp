@@ -8,7 +8,7 @@
 #include "Constants.hpp"
 
 
-namespace numcpp {
+namespace numxx {
 
 template <typename T = double, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 class complex {
@@ -457,4 +457,4 @@ struct underlying_type<complex<T>> {
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
-} // namespace numcpp
+} // namespace numxx

@@ -5,7 +5,7 @@
 #include "Utils/LinalgUtils.hpp"
 
 
-namespace numcpp::linalg {
+namespace numxx::linalg {
 
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     T det(const NArray<T>& mat) {
@@ -31,4 +31,4 @@ namespace numcpp::linalg {
         return res;
     }
 
-} // namespace numcpp::linalg
+} // namespace numxx::linalg

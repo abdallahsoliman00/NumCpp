@@ -5,7 +5,7 @@
 #include "NArray.hpp"
 #include "Matrix.hpp"
 
-namespace numcpp {
+namespace numxx {
 
 // Matrix-multiplication of two matrices
 template <typename dtype, typename T>
@@ -109,4 +109,4 @@ auto hadamard(const NArray<T>& larr, const NArray<U>& rarr)
     return out;
 }
 
-} // namespace numcpp
+} // namespace numxx

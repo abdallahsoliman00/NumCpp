@@ -7,7 +7,7 @@
 #include "StringOps.hpp"
 
 
-namespace numcpp {
+namespace numxx {
 
 struct Shape;
 
@@ -47,4 +47,4 @@ public:
 };
 
 } // namespace error
-} // namespace numcpp
+} // namespace numxx

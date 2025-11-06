@@ -3,7 +3,7 @@
 
 #include "NArray.hpp"
 
-namespace numcpp {
+namespace numxx {
     // TODO: Open https://numpy.org/doc/2.3/reference/routines.array-creation.html and implement functions.
 
     // Creates an array filled with zeros
@@ -149,4 +149,4 @@ namespace numcpp {
 
     
 
-} // namespace numcpp
+} // namespace numxx

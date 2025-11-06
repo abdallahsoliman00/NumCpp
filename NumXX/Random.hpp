@@ -5,7 +5,7 @@
 #include "Core/array_creation.hpp"
 
 
-namespace numcpp::random {
+namespace numxx::random {
 
 inline int MAX_RAND = 2147483647;
 inline std::random_device rd;
@@ -85,4 +85,4 @@ NArray<T> shuffle(const NArray<T>& arr) {
     return out;
 }
 
-} // namespace numcpp
+} // namespace numxx

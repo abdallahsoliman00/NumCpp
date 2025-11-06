@@ -7,10 +7,10 @@
 
 #include "Core/NArray.hpp"
 
-#define NARRAY_FILE_PREFIX "NumCpp::NArray"
+#define NARRAY_FILE_PREFIX "NumXX::NArray"
 
 
-namespace numcpp {
+namespace numxx {
 
     enum FileType {
         OTHER,
@@ -121,7 +121,7 @@ namespace numcpp {
 
 
     /* Reads a file that is written in NArray format:
-     * "NumCpp::NArray" on the first line, followed by the shape then the data */
+     * "NumXX::NArray" on the first line, followed by the shape then the data */
     template <typename T>
     NArray<T> read_NArray(const char* filepath) {
         // Open file
@@ -132,7 +132,7 @@ namespace numcpp {
 
         std::string line;
 
-        // Skip the header line "NumCpp::NArray"
+        // Skip the header line "NumXX::NArray"
         std::getline(file, line);
 
         // Extract shape
@@ -209,7 +209,7 @@ namespace numcpp {
             throw error::ShapeError(
                 "Cannot write an array of shape " + util::toString(arr.get_shape()) +
                 " to a file, NArray must have at most 2 dimensions."
-                "Try using numcpp::save_as_NArray() or reshaping the NArray to save."
+                "Try using numxx::save_as_NArray() or reshaping the NArray to save."
             );
         }
         std::ofstream file(filepath);
@@ -240,6 +240,6 @@ namespace numcpp {
         save_to_file(filepath, arr, delimiter);
     }
 
-} // namespace numcpp
+} // namespace numxx
 
 #undef NARRAY_FILE_PREFIX

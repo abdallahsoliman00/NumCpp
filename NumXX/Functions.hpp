@@ -7,7 +7,7 @@
 #include "Utils/MathFuncUtils.hpp"
 
 
-namespace numcpp {
+namespace numxx {
 
 /* ====== Trigonometric Functions ====== */
 
@@ -192,4 +192,4 @@ inline auto log10(T num) -> decltype(util::log10(num)) {
 }
 
 
-} // namespace numcpp
+} // namespace numxx

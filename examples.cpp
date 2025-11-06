@@ -1,27 +1,27 @@
 /* examples.cpp */
-#include "NumCpp/NumCpp.hpp"
+#include "NumXX/NumXX.hpp"
 
-namespace nc = numcpp;
-using nc::Shape;
+namespace nx = numxx;
+using nx::Shape;
 
 
 void initialisation_example() {
-    /* For more, see NumCpp/Core/array_creation.hpp */
+    /* For more, see NumXX/Core/array_creation.hpp */
     // Array initialisation
-    auto array1 = nc::NArray({1,2,3});
-    auto array2 = nc::linspace(0,1,20, false);
-    auto array3 = nc::arange(0,10,1);
+    auto array1 = nx::NArray({1,2,3});
+    auto array2 = nx::linspace(0,1,20, false);
+    auto array3 = nx::arange(0,10,1);
 
-    auto mat1 = nc::Matrix({
+    auto mat1 = nx::Matrix({
         {1,2},
         {3,4}
     });
-    auto mat2 = nc::NArray({
+    auto mat2 = nx::NArray({
         {2,4},
         {6,8}
     });
 
-    auto tensor = nc::NArray({
+    auto tensor = nx::NArray({
         {{1,2},{3,4}},
         {{5,6},{7,8}}
     });
@@ -68,10 +68,10 @@ void constructors_example() {
        Here are the most useful ones: */
 
     // initializer_list constructor
-    auto arr1 = nc::NArray({1,2,3,4});
+    auto arr1 = nx::NArray({1,2,3,4});
 
     // n-dimensional array ... any number of dimensions
-    auto arr2 = nc::NArray({
+    auto arr2 = nx::NArray({
         {{{1,2},{3,4}},
         {{1,2},{3,4}}},
 
@@ -83,24 +83,24 @@ void constructors_example() {
     });
 
     // repeat/shape constructor
-    auto arr3 = nc::NArray(Shape{2,2}, 3.14f);
-    auto arr4 = nc::NArray(5, 1.25f);
+    auto arr3 = nx::NArray(Shape{2,2}, 3.14f);
+    auto arr4 = nx::NArray(5, 1.25f);
 
     // from std::vector
     std::vector<int> vec(4);
-    auto arr5 = nc::NArray(vec);
+    auto arr5 = nx::NArray(vec);
 
     // from iterator
     vec[2] = 4;
-    auto arr6 = nc::NArray<int>(vec.begin(), vec.end() - 1);  
+    auto arr6 = nx::NArray<int>(vec.begin(), vec.end() - 1);
 
     // input flat data + shape
-    auto arr7 = nc::NArray(vec, Shape{2,2});
+    auto arr7 = nx::NArray(vec, Shape{2,2});
 
     // share a shared_ptr
     std::shared_ptr<double> data_ptr(new double[7](), std::default_delete<double[]>());
     data_ptr.get()[3] = 13.13;
-    auto arr8 = nc::NArray(data_ptr, Shape{7});
+    auto arr8 = nx::NArray(data_ptr, Shape{7});
 
     std::cout << "arr1:\n" << arr1 << "\n\n";
     std::cout << "arr2:\n" << arr2 << "\n\n";

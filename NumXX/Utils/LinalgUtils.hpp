@@ -4,7 +4,7 @@
 #include "../Core/NArray.hpp"
 
 
-namespace numcpp::util {
+namespace numxx::util {
 
     template <typename T>
     NArray<T> get_minor_matrix(const NArray<T>& mat, const size_t i, const size_t j) {
@@ -32,4 +32,4 @@ namespace numcpp::util {
         return out;
     }
 
-} // namespace numcpp::util
+} // namespace numxx::util

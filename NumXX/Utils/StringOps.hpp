@@ -8,7 +8,7 @@
 #include "../MathOps.hpp"
 #include "../Complex.hpp"
 
-namespace numcpp::util {
+namespace numxx::util {
 
 /* A struct containing any attributes that
 will be used to format NArray printing */
@@ -248,4 +248,4 @@ std::string num_to_str_from_attributes(const complex<T>& num, const PrintAttribu
     return num_to_str_from_attributes(num.real(), attributes);
 }
 
-} // namespace numcpp::util
+} // namespace numxx::util

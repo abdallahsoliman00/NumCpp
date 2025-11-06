@@ -4,7 +4,7 @@
 #include "NArray.hpp"
 
 
-namespace numcpp {
+namespace numxx {
 
 template <typename dtype = double>
 class Matrix final : public NArray<dtype> {
@@ -243,4 +243,4 @@ private:
 
 };
 
-} // namespace numcpp
+} // namespace numxx

@@ -5,7 +5,7 @@
 #include "../Complex.hpp"
 
 
-namespace numcpp::util {
+namespace numxx::util {
 
 /* Exponentials and Logarithms */
 
@@ -284,4 +284,4 @@ complex<T> atan(const complex<T>& n) {
 }
 
 
-} // namespace numcpp::util
+} // namespace numxx::util

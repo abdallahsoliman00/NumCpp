@@ -6,7 +6,7 @@
 
 #include "../Utils/Errors.hpp"
 
-namespace numcpp {
+namespace numxx {
 
 /* An enum class to help label the different types of vector and matrix multiplications */
 enum class MatmulType {
@@ -209,4 +209,4 @@ private:
 };  // struct Shape
 
 
-} // namespace numcpp
+} // namespace numxx

@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-namespace numcpp {
+namespace numxx {
 
 template <typename T>
 bool isinf(T num) {
@@ -15,4 +15,4 @@ bool isinf(T num) {
     }
 }
 
-} // namespace numcpp
+} // namespace numxx

@@ -13,7 +13,7 @@
 #include "../Utils/Errors.hpp"
 
 
-namespace numcpp {
+namespace numxx {
 
 template <typename dtype = double>
 class NArray {
@@ -979,4 +979,4 @@ NArray(std::shared_ptr<T>, T*, Shape) -> NArray<T>;
 template <typename T>
 NArray(std::shared_ptr<T>, Shape) -> NArray<T>;
 
-} // namespace numcpp
+} // namespace numxx

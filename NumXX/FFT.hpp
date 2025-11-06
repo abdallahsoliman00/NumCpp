@@ -8,7 +8,7 @@
 #define M_2PI 6.283185307179586
 
 
-namespace numcpp::fft {
+namespace numxx::fft {
 
     template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     NArray<complex<T>> dft(const NArray<T>& x_n) {
@@ -19,7 +19,7 @@ namespace numcpp::fft {
         for (size_t k = 0; k < N_2 + 1; k++) {
             complex<T> sum = 0;
             for (size_t n = 0; n < N_samples; n++) {
-                sum += numcpp::polar<T>(
+                sum += numxx::polar<T>(
                     x_n.get_data()[n],
                     (-M_2PI*static_cast<T>(k)*static_cast<T>(n)/N_samples)
                 );
@@ -63,6 +63,6 @@ namespace numcpp::fft {
     }
 
 
-} // namespace numcpp::fft
+} // namespace numxx::fft
 
 #undef M_2PI

@@ -1,4 +1,4 @@
-/* NumCpp.hpp */
+/* NumXX.hpp */
 #pragma once
 
 #include "Core/array_creation.hpp"

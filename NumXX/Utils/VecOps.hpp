@@ -5,7 +5,7 @@
 
 #include "../Core/Shape.hpp"
 
-namespace numcpp::util {
+namespace numxx::util {
 
 // Returns a vector containing the flattened matrix product
 template <typename dtype, typename T>
@@ -107,4 +107,4 @@ std::vector<std::vector<T>> split(std::vector<T>&& vin, const size_t& n_groups) 
     return vout;
 }
 
-} // namespace numcpp::util
+} // namespace numxx::util

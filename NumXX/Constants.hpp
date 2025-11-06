@@ -4,7 +4,7 @@
 #include <limits>
 #include <cmath>
 
-namespace numcpp {
+namespace numxx {
     
     constexpr double pi = M_PI;
     constexpr double e = M_E;
@@ -14,4 +14,4 @@ namespace numcpp {
 
     constexpr float inf = inf_t<float>;
 
-}   // namespace numcpp
+}   // namespace numxx

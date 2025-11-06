@@ -1,14 +1,14 @@
 <p align="center">
   <img src="logo.svg" alt="Description" width="40%" />
 </p>
-<!-- # NumCpp -->
+<!-- # NumXX -->
 
 A C++ header-only library inspired by NumPy.
 
 (Compatible with C++17 and above)
 
 ## Overview
-**NumCpp** is an implementation of NumPy in C++. It hopes to bring about the easy number and array manipulation found in NumPy ... but in C++.
+**NumXX** is an implementation of NumPy in C++. It hopes to bring about the easy number and array manipulation found in NumPy ... but in C++.
 
 
 ## How To Use
@@ -17,19 +17,19 @@ This library was made completely in vanilla C++, so using it should be simple.
 ```shell
 git clone https://github.com/abdallahsoliman00/NumCpp.git
 ```
-- Add the folder [NumCpp](NumCpp) to your include path.
+- Add the folder [NumXX](NumXX) to your include path.
 - Add the following line to the top of your C++ file:
 ```cpp
-#include "NumCpp/NumCpp.hpp"
+#include "NumXX.hpp"
 ```
-- You are now ready to use NumCpp.
+- You are now ready to use NumXX.
 
 ## Project Status
 This project is still underway, but current features include:
 * Easy array creation for any number of dimensions
 * Element-wise operations
 * Array slicing
-* Basic matrix and vector operations (see [here](NumCpp/Core/VecOps.hpp))
+* Basic matrix and vector operations (see [here](NumXX/Core/VecOps.hpp))
 * Reshaping arrays
 * More features coming soon!
 

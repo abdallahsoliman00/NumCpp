@@ -4,7 +4,7 @@
 #include "../Core/NArray.hpp"
 
 
-namespace numcpp::util {
+namespace numxx::util {
 
 template <typename T, typename Func>
 auto elementwiseFunc(const NArray<T>& arr, Func func)
@@ -19,4 +19,4 @@ auto elementwiseFunc(const NArray<T>& arr, Func func)
     return out;
 }
 
-} // namespace numcpp
+} // namespace numxx
