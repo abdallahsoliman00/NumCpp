@@ -15,7 +15,6 @@ project(NumXX
 add_library(NumXX INTERFACE)
 
 target_include_directories(
-    NumXX
-    INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/NumXX
+    NumXX INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/NumXX
 )

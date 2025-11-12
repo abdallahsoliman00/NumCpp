@@ -128,25 +128,36 @@ namespace numxx {
     NArray<T> full(Shape&& shape, T fill_value) {
         return NArray<T>(std::move(shape), fill_value);
     }
+
     template <typename T = double>
     NArray<T> full(const size_t shape, T fill_value) {
         return NArray<T>(Shape{shape}, fill_value);
     }
 
 
-    // Returns a full array with the same shape and type as a given array
+    // Returns a full array with the same shape as a given array
     template <typename T = double, typename U>
     NArray<T> full_like(const NArray<U>& other, T fill_value) {
         return NArray<T>(other.get_shape(), fill_value);
     }
 
 
-    // Returns a copy of the input array
+    // Returns a shallow copy of the input array
     template <typename T>
     NArray<T> copy(const NArray<T>& arr) {
         return arr.copy();
     }
 
-    
+    // Returns a deep copy of the input array (could remove this and just keep the one below)
+    template <typename T>
+    NArray<T> deepcopy(const NArray<T>& arr) {
+        return arr.deepcopy();
+    }
+
+    // Returns a deep copy of whatever element was given
+    template <typename T>
+    T deepcopy(const T& elem) {
+        return T(elem);
+    }
 
 } // namespace numxx

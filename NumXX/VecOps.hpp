@@ -1,9 +1,9 @@
 /* VecOps.hpp */
 #pragma once
 
-#include "Shape.hpp"
-#include "NArray.hpp"
-#include "Matrix.hpp"
+#include "Core/Shape.hpp"
+#include "Core/NArray.hpp"
+#include "Core/Matrix.hpp"
 
 namespace numxx {
 
@@ -58,8 +58,7 @@ auto dot(const NArray<A>& a, const NArray<B>& b)
             return matmul(a,b);
 
         default:
-        throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
-        break;
+            throw error::ShapeError(a.get_shape(), b.get_shape(), "dot");
     }
 }
 
@@ -108,5 +107,33 @@ auto hadamard(const NArray<T>& larr, const NArray<U>& rarr)
 
     return out;
 }
+
+
+template <typename T, typename U, typename = std::enable_if_t<is_complex_or_arithmetic_v<T> && is_complex_or_arithmetic_v<U>>>
+auto cross(const NArray<T>& a, const NArray<U>& b)
+    -> NArray<decltype(std::declval<T>() * std::declval<U>())>
+{
+    using A = decltype(std::declval<T>() * std::declval<U>());
+
+    const Shape &a_shape = a.get_shape(), &b_shape = b.get_shape();
+    if ((a_shape.get_Ndim() != 1 || (a_shape[0] != 2 && a_shape[0] != 3)) ||
+        (b_shape.get_Ndim() != 1 || (b_shape[0] != 2 && b_shape[0] != 3)))
+    {
+        throw error::ShapeError("Both input arrays must have shapes (2,) or (3,).");
+    }
+
+    const T &x = a(0), &y = a(1); T z;
+    if (a.get_shape()[0] == 2) z = 0;
+    else z = a(2);
+
+    const U &p = b(0), &q = b(1); U r;
+    if (b.get_shape()[0] == 2) r = 0;
+    else r = b(2);
+
+    NArray<A> out(Shape{3});
+    out(0) = y*r - z*q;    out(1) = z*p - x*r;    out(2) = x*q - y*p;
+    return out;
+}
+
 
 } // namespace numxx

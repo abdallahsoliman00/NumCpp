@@ -29,7 +29,7 @@ This project is still underway, but current features include:
 * Easy array creation for any number of dimensions
 * Element-wise operations
 * Array slicing
-* Basic matrix and vector operations (see [here](NumXX/Core/VecOps.hpp))
+* Basic matrix and vector operations (see [here](NumXX/VecOps.hpp))
 * Reshaping arrays
 * More features coming soon!
 
@@ -37,7 +37,25 @@ For a fully working implementation, see [https://github.com/dpilger26/NumCpp](ht
 
 
 ## Examples
-To see how this library could be used, see this [examples](examples.cpp) file.
+This library aims to imitate NumPy functionality, so for example, if you want to run this in NumPy:
+```python
+import numpy as np
+
+x = np.array([1,2,3,4])
+np.sum(x)
+```
+
+Try this in NumXX:
+```c++
+#include "NumXX.hpp"
+namespace nx = numxx;
+
+auto x = nx::NArray({1,2,3,4});
+nx::sum(x);
+```
+If it doesn't exist, it hasn't been implemented yet, and if you're feeling generous perhaps you can implement it yourself and open a pull request.
+
+To see a small taster snippet of code, see this [examples](examples.cpp) file.
 
 
 ## Contribution
