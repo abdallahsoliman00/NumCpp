@@ -411,7 +411,7 @@ T conj(const T& num)
 
 /* ====== Constants ====== */
 
-const complex<double> j(0,1);
+// const complex<double> j(0,1);
 // const auto i = j;
 
 

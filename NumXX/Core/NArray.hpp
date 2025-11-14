@@ -126,7 +126,7 @@ protected:
         if((index < 0) && (index >= -size))
             return static_cast<size_t>(index + size);
 
-        throw std::runtime_error("Array index out of range.");
+        throw std::range_error("Array index out of range.");
     }
 
     // Enables Python-like indexing with negative indexes wrapping around (for accessing elements)
@@ -138,7 +138,7 @@ protected:
         if((index < 0) && (index >= -size))
             return (index + size);
 
-        throw std::runtime_error("Element index out of range.");
+        throw std::range_error("Element index out of range.");
     }
 
 
@@ -166,26 +166,26 @@ protected:
     {
         using U = decltype(func(std::declval<dtype>(), std::declval<T>()));
 
-        std::vector<U> newVec(_shape.get_total_size());
+        NArray<U> newArr(_shape);
         for(size_t i = 0; i < _shape.get_total_size(); i++) {
-            newVec[i] = func(get_data()[i], scalar);
+            newArr(i) = func(get_data()[i], scalar);
         }
-        return NArray<U>(std::move(newVec), _shape);
+        return newArr;
     }
 
 
     // Performs the scalar operation to the left of each element in the array
     template <typename T, typename Func>
-    auto fullVecOpL(const T scalar, Func func)
+    auto fullVecOpL(const T& scalar, Func func)
         const -> NArray<decltype(func(std::declval<T>(), std::declval<dtype>()))>
     {
         using U = decltype(func(std::declval<T>(), std::declval<dtype>()));
 
-        std::vector<dtype> newVec(_shape.get_total_size());
+        NArray<U> newArr(_shape);
         for(size_t i = 0; i < _shape.get_total_size(); i++) {
-            newVec[i] = func(scalar, get_data()[i]);
+            newArr(i) = func(scalar, get_data()[i]);
         }
-        return NArray<U>(std::move(newVec), _shape);
+        return newArr;
     }
 
 
@@ -532,9 +532,9 @@ public:
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator+(const NArray<T>& other) const {
         if(!same_shape(*this, other))
-            throw error::ShapeError(this->_shape, other._shape, "add");
-        else
-            return elementWiseOp(other, [] (const auto& a, const auto& b) { return a + b; } );
+            throw error::ShapeError(this->_shape, other.get_shape(), "add");
+
+        return elementWiseOp(other, [] (const auto& a, const auto& b) { return a + b; } );
     }
 
 
@@ -542,9 +542,9 @@ public:
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator-(const NArray<T>& other) const {
         if(!same_shape(*this, other))
-            throw error::ShapeError(this->_shape, other._shape, "subtract");
-        else
-            return elementWiseOp(other, [] (const auto& a, const auto& b) { return a - b; } );
+            throw error::ShapeError(this->_shape, other.get_shape(), "subtract");
+
+        return elementWiseOp(other, [] (const auto& a, const auto& b) { return a - b; } );
     }
 
 
@@ -552,9 +552,9 @@ public:
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator*(const NArray<T>& other) const {
         if(!same_shape(*this, other))
-            throw error::ShapeError(this->_shape, other._shape, "multiply");
-        else
-            return elementWiseOp(other, [] (const auto& a, const auto& b) { return a * b; } );
+            throw error::ShapeError(this->_shape, other.get_shape(), "multiply");
+
+        return elementWiseOp(other, [] (const auto& a, const auto& b) { return a * b; } );
     }
 
 
@@ -562,9 +562,9 @@ public:
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     auto operator/(const NArray<T>& other) const {
         if(!same_shape(*this, other))
-            throw error::ShapeError(this->_shape, other._shape, "divide");
-        else
-            return elementWiseOp(other, [] (const auto& a, const auto& b) { return a / b; } );
+            throw error::ShapeError(this->_shape, other.get_shape(), "divide");
+
+        return elementWiseOp(other, [] (const auto& a, const auto& b) { return a / b; } );
     }
 
 
@@ -638,6 +638,17 @@ public:
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     friend auto operator/(T num, const NArray& arr) {
         return arr.fullVecOpL(num, [] (const T& a, const dtype& b) { return a / b; });
+    }
+
+
+    // Negation overload
+    friend auto operator-(const NArray& arr) {
+        return arr.fullVecOpL(dtype(-1), [] (const dtype& a, const dtype& b) { return a * b; });
+    }
+
+    // Do nothing, but just in case someone uses it overload
+    friend NArray& operator+(NArray& arr) {
+        return arr;
     }
 
 
@@ -829,22 +840,22 @@ public:
     explicit operator int() const {
         if (_shape.get_total_size() == 1)
             return static_cast<int>(get_data()[0]);
-        else
-            throw error::ConversionError(_shape, "int");
+
+        throw error::ConversionError(_shape, "int");
     }
 
     explicit operator long long() const {
         if (_shape.get_total_size() == 1)
             return static_cast<long long>(get_data()[0]);
-        else
-            throw error::ConversionError(_shape, "long long");
+
+        throw error::ConversionError(_shape, "long long");
     }
 
     explicit operator double() const {
         if (_shape.get_total_size() == 1)
             return static_cast<double>(get_data()[0]);
-        else
-            throw error::ConversionError(_shape, "double");
+
+        throw error::ConversionError(_shape, "double");
     }
 
     explicit operator bool() const {
@@ -855,6 +866,21 @@ public:
 
     /* ===== NArray functions ====== */
 
+    // Applies the input function `func` to each element in the array
+    template <typename Func>
+    auto funcToNArray(Func func)
+        const -> NArray<decltype(func(std::declval<dtype>()))>
+    {
+        using U = decltype(func(std::declval<dtype>()));
+
+        NArray<U> out(_shape);
+        for (size_t i = 0; i < get_total_size(); i++)
+            out(i) = func(get_data()[i]);
+
+        return out;
+    }
+
+
     // Returns a NEW transposed matrix
     [[nodiscard]] NArray transpose() const {
         auto out_shape = _shape.transpose();
@@ -862,6 +888,7 @@ public:
         util::transpose(out_data_ptr.get(), _data_ptr.get(), _shape);
         return NArray(out_data_ptr, out_shape);
     }
+
 
     // Returns a NEW transposed matrix (wrapper for NArray::transpose())
     [[nodiscard]] NArray T() const { return transpose(); }
@@ -875,18 +902,34 @@ public:
 
 
     // Returns a flat view of the array
-    NArray ravel() {
+    [[nodiscard]] NArray ravel() {
         if (_shape.get_Ndim() == 1) return *this;
         return NArray(_data_ptr, _shape.flatten());
     }
 
 
     // Returns a deep copy of the NArray
-    NArray deepcopy() { return NArray(*this); }
+    [[nodiscard]] NArray deepcopy() const { return NArray(*this); }
 
 
     // Returns a shallow copy of the NArray
-    NArray copy() { return NArray(_data_ptr, _shape); }
+    [[nodiscard]] NArray copy() const { return NArray(_data_ptr, _shape); }
+
+
+    NArray& reshape(const Shape& shape) {
+        if (shape.get_total_size() != this->get_total_size())
+            throw error::ShapeError("New shape does not fit existing data.");
+        _shape = shape;
+        return *this;
+    }
+
+    NArray& reshape(Shape&& shape) {
+        if (shape.get_total_size() != this->get_total_size())
+            throw error::ShapeError("New shape does not fit existing data.");
+        _shape = std::move(shape);
+        return *this;
+    }
+
 
     // Returns the real components of a complex vector
     [[nodiscard]] auto real() const
@@ -923,8 +966,8 @@ public:
     }
 
     // Returns the length of the NArray (the last element of _shape)
-    [[nodiscard]] size_t length() const { return _shape[-1]; }
-    [[nodiscard]] size_t len() const { return _shape[-1]; }
+    [[nodiscard]] size_t length() const { return *_shape.end(); }
+    [[nodiscard]] size_t len() const { return *_shape.end(); }
 
     // begin iterator over the NArray's data
     dtype* begin() { return _data_ptr.get(); }

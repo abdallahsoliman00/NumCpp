@@ -54,6 +54,12 @@ struct Shape {
 
     /* ====== Helper Functions ====== */
 
+    [[nodiscard]] const size_t *begin() const { return &dimensions[0]; }
+    size_t *begin() { return &dimensions[0]; }
+
+    [[nodiscard]] const size_t *end() const { return &dimensions[0] + dimensions.size(); }
+    size_t *end() { return &dimensions[0] + dimensions.size(); }
+
     // Inserts a dimension at a specified position
     void insert_dimension(const size_t dimension, const int position) {
         dimensions.insert(dimensions.begin() + get_index(position), dimension);
@@ -84,6 +90,27 @@ struct Shape {
         if (get_Ndim() == 2 && dimensions[0] == dimensions[1]) return true;
         if (get_total_size() == 1) return true;
         return false;
+    }
+
+
+    // Computes the strides for an array
+    [[nodiscard]] std::vector<size_t> compute_strides() const {
+        const auto ndim = get_Ndim();
+        int stride = 1;
+        std::vector<size_t> strides(ndim);
+        for (int i = ndim - 1; i >= 0; --i) {
+            strides[i] = stride;
+            stride *= dimensions[i];
+        }
+        return strides;
+    }
+
+    static void compute_strides(const Shape& shape, size_t *arr, const size_t ndim) {
+        int stride = 1;
+        for (int i = ndim - 1; i >= 0; --i) {
+            arr[i] = stride;
+            stride *= shape[i];
+        }
     }
 
 
@@ -177,8 +204,13 @@ struct Shape {
         return !same_shape(other);
     }
 
-    // Index operator
+    // Index operator (immutable reference)
     const size_t& operator[](const long long index) const {
+        return dimensions[get_index(index)];
+    }
+
+    // Index operator (mutable reference)
+    size_t& operator()(const long long index) {
         return dimensions[get_index(index)];
     }
 
