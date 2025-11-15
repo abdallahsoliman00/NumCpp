@@ -82,7 +82,6 @@ namespace numxx {
             return NArray<T>();
         }
 
-        // Calculate final output shape
         Shape out_shape = shape;
         out_shape(axis) -= n;
 
@@ -96,7 +95,7 @@ namespace numxx {
 
         // For each output element
         for (size_t out_idx = 0; out_idx < out_shape.get_total_size(); out_idx++) {
-            // Convert flat output index to multi-dimensional coordinates
+            // Convert flat output index to multi-dimensional coords
             size_t coords[ndim];
             size_t temp = out_idx;
             for (size_t d = 0; d < ndim; d++) {
@@ -124,7 +123,6 @@ namespace numxx {
             }
             out(out_idx) = result;
         }
-
         return out;
     }
 } // namespace numxx

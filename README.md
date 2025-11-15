@@ -12,17 +12,43 @@ A C++ header-only library inspired by NumPy.
 
 
 ## How To Use
-This library was made completely in vanilla C++, so using it should be simple.
+This library was made completely in vanilla C++, so using it should be simple. There are two ways:
+### Method 1:
 - Simply clone this repository:
 ```shell
 git clone https://github.com/abdallahsoliman00/NumXX.git
 ```
 - Add the folder [NumXX](NumXX) to your include path.
-- Add the following line to the top of your C++ file:
-```cpp
+- To use, add the following line to the top of your C++ file:
+```c++
 #include "NumXX.hpp"
 ```
-- You are now ready to use NumXX.
+
+### Method 2:
+- Add the following to your CMakeLists.txt project file:
+```cmake
+# Fetch NumXX from GitHub
+include(FetchContent)
+
+FetchContent_Declare(
+    NumXX
+    GIT_REPOSITORY https://github.com/abdallahsoliman00/NumXX.git
+    GIT_TAG main
+)
+
+FetchContent_MakeAvailable(NumXX)
+
+# Link library
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    NumXX
+)
+
+```
+- You can now use the library by adding the following:
+```c++
+#include <NumXX.hpp>
+```
 
 ## Project Status
 This project is still underway, but current features include:
@@ -37,7 +63,7 @@ For a fully working implementation, see [https://github.com/dpilger26/NumCpp](ht
 
 
 ## Examples
-This library aims to imitate NumPy functionality, so for example, if you want to run this in NumPy:
+This library aims to mimic NumPy functionality, so for example, if you want to run this in NumPy:
 ```python
 import numpy as np
 
