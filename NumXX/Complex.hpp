@@ -457,6 +457,15 @@ struct underlying_type<complex<T>> {
 template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
+
+constexpr complex<double> operator""_j(const long double value) {
+    return {0,static_cast<double>(value)};
+}
+
+constexpr complex<long> operator""_j(const unsigned long long value) {
+    return {0,static_cast<long>(value)};
+}
+
 } // namespace numxx
 
 
