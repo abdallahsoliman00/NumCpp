@@ -5,6 +5,18 @@
 
 namespace numxx {
 
+    // Used to cast an array to a new type `T`
+    template <typename T, typename U>
+    NArray<T> array_cast(const NArray<U>& arr) {
+        NArray<T> out(arr.get_shape());
+
+        for (size_t i = 0; i < arr.get_total_size(); i++) {
+            out(i) = static_cast<T>(arr(i));
+        }
+        return out;
+    }
+
+
     // Flattens the array and returns the sum
     template <typename T, typename = std::enable_if_t<is_complex_or_arithmetic_v<T>>>
     T sum(const NArray<T>& arr) {
